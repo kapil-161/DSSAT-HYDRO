@@ -1,0 +1,5 @@
+C:\DSSAT48\Lettuce this is current location to find experimental file
+
+
+cd C:\DSSAT48\Lettuce; C:\dssat-csm-os\build\bin\dscsm048.exe A UFGA2402.LUX
+correct way to run experiment file

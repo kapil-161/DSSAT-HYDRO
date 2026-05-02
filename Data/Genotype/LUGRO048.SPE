@@ -1,0 +1,249 @@
+*LETTUCE SPECIES COEFFICIENTS: CRGRO048 MODEL 
+
+!*PHOTOSYNTHESIS PARAMETERS
+ 40.00 68.00  0.65                         PARMAX,PHTMAX,KCAN
+  80.0  2.09 .0105                         CCMP,CCMAX,CCEFF; CO2 EFFECT ON PGCAN
+  1.04  2.57  20.0  20.0   QDR             FNPGN(4),TYPPGN-LEAF N EFFECT ON PG
+  0.00  10.0  28.0  42.0   LIN             FNPGT(4),TYPPGT-TEMP EFFECT-CANOPY PG
+   0.0   4.0  35.0  40.0  46.0  55.0       XLMAXT (6 VALUES)
+   0.0   0.0   1.0   0.8   0.0   0.0       YLMAXT (6 VALUES)
+! XLMAXT/YLMAXT calibrated 2026-04-13 using Skyphos (UFGA2201 TRT9-12, 24-30C),
+!   Waldmanns Green (UFGA2402 TRT2,4,6,8, 21-34C), Sitonia (WAGA9101, ~20C avg)
+! Basis: Jmax Topt for C3 crops at elevated CO2 is 35-40C (Sage, 2007; Crafts-Brandner & Salvucci, 2000)
+!   Lettuce base temp Tb=4C (literature); X2=4C per Bonnes et al. (2019) range 3.5-4.5C
+!   Optimum plateau 35-40C; Y4=0.8 (moderate decline above Topt); zero at 46C (PS II damage)
+! Normalization at 30C: TEMPMX(21C)=0.654, TEMPMX(28C)=0.923, TEMPMX(34C)=1.154
+! FNPGL X1 raised 10->15C: chilling threshold for lettuce leaf Pmax (Kleinhenz & Schnitzler, 2004)
+!   WAGA9101 TMIN=7C -> CHILL=0.855; chamber treatments TMIN>=18C -> CHILL=1.0 (no effect)
+! FNPGT widened to (2,12,28,42): inactive for PHOTO=L (leaf option); retained for completeness
+ -6.00 15.00  50.0  60.0   QDR             FNPGL(4),TYPPGL-TMIN EFFECT-LEAF PG
+ .1470  0.15  0.80   2.0                   PGEFF SCV KDIF, LFANGB
+ .0035 .0001 .5000  2.54 1.030             SLWREF,SLWSLO,NSLOPE,LNREF,PGREF
+
+   0.0  .001  .002  .003 .0035  .004  .005  .006  .008  .010  XPGSLW(1-10)
+  .162  .679  .867  .966 1.000 1.027 1.069 1.100 1.141 1.167  YPGSLW(1-10)
+
+!*RESPIRATION PARAMETERS
+     3.5E-04 .0040                      RES30C,R30C2
+ 2.556 2.556  .360  2.830               RNO3C,RNH4C,RPRO,RFIXN  ! RFIXN unused (no N fixation)
+ 1.242 3.106 2.174  .929  0.05  1.13    RCH20,RLIP,RLIG,ROA,RMIN,PCH2O
+
+!*PLANT COMPOSITION VALUES
+  .344  .215  .224  .178  .110  .035   PROLFI,PROLFG,PROLFF,PROSTI,PROSTG,PROSTF  ! PROLFG,PROSTG,PROSTF unused (reproductive stages never reached)
+! PROLFI=0.344: peak shoot N% 5.50% DW at Week1 (Heinen 1994, 5.50/16=0.344)
+! PROLFF=0.224: harvest shoot N% 3.59% DW at Week7 (Heinen 1994, 3.59/16=0.224)
+  .260  .240  .150  .160  .150  .120   PRORTI,PRORTG,PRORTF,PROSHI,PROSHG,PROSHF  ! PRORTG,PRORTF unused; PROSHI,PROSHG,PROSHF unused (no shells)
+  .180  .180  .300  0.02  0.04   0.8   SDPROS,SDPROG,PRONOD,PROMIN,PROMAX,THETA   ! all unused (no seeds, no nodules)
+  .502  .675  .694  .626  .606  .480   PCARLF,PCARST,PCARRT,PCARSH,PCARSD,PCARNO
+  .024  .017  .024  .024  .050         PLIPLF,PLIPST,PLIPRT,PLIPSH,PLIPNO
+  .111  .076  .111  .111  .111  .070   PLIGLF,PLIGST,PLIGRT,PLIGSH,PLIGSD,PLIGNO
+  .036  .024  .036  .036  .036  .050   POALF,POAST,POART,POASH,POASD,POANO
+  .043  .030  .043  .043  .043  .050   PMINLF,PMINST,PMINRT,PMINSH,PMINSD,PMINNO
+
+!*SEED  COMPOSITION VALUES  ! UNUSED: lettuce has no seeds
+ 7.168 23.65 0.908 0.180               LIPTB,LIPOPT,SLOSUM*100,CARMIN  ! all unused
+
+!*CARBON AND NITROGEN MINING PARAMETERS
+ 0.030  0.75  .140  .074  0.20  0.15   CMOBMX,CADSTF,CADPR1,NMOBMX,NVSMOB,NRCVR
+    PD  0.70                           XPODF, NSTFAC
+  0.04  0.08  0.04  0.08               ALPHL,ALPHS,ALPHR,ALPHSH
+
+!*NITROGEN FIXATION PARAMETERS  ! UNUSED: lettuce does not fix N2
+  .045  .170  .014   0.0  0.07  0.05   SNACTM,NODRGM,DWNODI,TTFIX,NDTHMX,CNODCR  ! unused
+  7.00  28.0  35.0  44.0   LIN         FNNGT(4),TYPNGT-TEMP EFF ON NOD GROWTH      ! unused
+  5.00  23.0  35.0  44.0   LIN         FNFXT(4),TYPFXT-TEMP EFF ON N FIX           ! unused
+  -.15  0.20  1.00  10.0   LIN         FNFXD(4),TYPFXD-REL SW-DRY EFF ON N FIX    ! unused
+  -.02  0.02  1.00  2.00   LIN         FNFXW(4),TYPFXW-REL SW-WET EFF ON N FIX    ! unused
+  0.00  0.10  1.00  0.00   INL         FNFXA(4),TYPFXA-AGE EFF ON N FIX            ! unused
+
+!*VEGETATIVE PARTITIONING PARAMETERS
+   0.0   2.0   4.0   6.0   9.0  14.0  25.0  40.0  XLEAF VALUES
+  0.70  0.70  0.72  0.72  0.75  0.75  0.75  0.75  YLEAF VALUES
+  0.10  0.10  0.10  0.10  0.10  0.06  0.07  0.10  YSTEM VALUES
+  0.55  0.58  0.17  0.68  1.00  0.05  WTFSD,PORPT,FRSTMF,FRLFF,ATOP,FRCNOD
+  0.70                                FRLFMX
+
+!*LEAF GROWTH PARAMETERS
+  600.  296.  50.0   5.0   0.0        FINREF,SLAREF,SIZREF,VSSINK,EVMODC
+  377. 200.0 -.048  1.50  1.00        SLAMAX,SLAMIN,SLAPAR,TURSLA,NSLA
+
+   0.0   1.0   2.0   3.0   4.0   5.0  XVGROW(1-6), VSTAGE VALUES
+   0.0  13.0  32.0  59.0  97.0 151.0  YVREF(1-6), LEAF AREA VALUES,CM2
+ -50.0  00.0  00.0  15.0  40.0        XSLATM(1-5),TEMP VALUES
+  0.25  0.25  0.25  1.00  1.0         YSLATM(1-5),EFFECT ON SLA
+
+!*LEAF SENESCENCE FACTORS
+  0.80  0.00  0.06 -6.00 -10.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2
+  0.01  10.0                          ICMP,TCMP(Light comp, time constant-senes)
+
+! .......XSTAGE.........  .......XSENMX.........
+   0.0   5.0  14.0  30.0   3.0   5.0  10.0  30.0
+! .......SENPOR.........  .......SENMAX.........
+   0.0   0.0  0.12  0.12   0.0   0.2   0.2   0.2
+
+!*ROOT PARAMETERS
+  15.0 9990. 0.020   0.1  .015  1.50  0.04  RTDEPI,RFAC1,RTSEN,RLDSM,RTSDF,RWUEP1,RWUMX
+   0.0  4.00   4.0  4.00   8.0  3.00  30.0  2.40   XRTFAC,YRTFAC
+ 0.010 0.010  0.02  0.10                    RTNO3,RTNH4,PORMIN,RTEXF  ! RTNO3,RTNH4,PORMIN unused in hydroponic mode
+
+!*SEED AND SHELL GROWTH PARAMETERS  ! UNUSED: lettuce is harvested vegetatively before reproduction
+  1.00   0.3  0.00  100.               SETMAX,SRMAX,RFLWAB,XMPAGE           ! unused
+  15.0   0.0   0.0                     DSWBAR,XFRMAX,SHLAG                  ! unused
+   0.0  15.0  25.0  40.0   QDR         FNPDT(1-4),TYPPDT-TEMP EFFECT ON POD SET  ! unused
+   0.0  15.0  20.0  41.0   QDR         FNSDT(1-4),TYPSDT-TEMP EFFECT ON SD GRWTH ! unused
+  0.00  5.00 20.00 30.00 40.00 60.00   XXFTEM(1-6),TEMPERATURES             ! unused
+  1.00  1.00  1.00  1.00  0.00  0.00   YXFTEM(1-6),REL CHG IN PARTIT        ! unused
+  0.00  0.50  1.00  1.00               XSWFAC(1-4)                          ! unused
+  1.00  1.00  1.00  1.00               YSWFAC(1-4)                          ! unused
+  0.00  0.01  0.25  1.00  1.00         XSWBAR(1-5),REL WATER TOPSOIL        ! unused
+  1.00  1.00  1.00  1.00  1.00         YSWBAR(1-5),EFFECT ON PNUT PEGGING   ! unused
+  0.00  0.50  0.75  1.00               XTRFAC(1-4),TURFAC                   ! unused
+  0.00  0.00  0.00  0.00               YTRFAC(1-4),ENHANCE REPROD. GROWTH   ! unused
+
+!*POD LOSS PARAMETERS  ! UNUSED: lettuce has no pods
+     N   6.0 .3961 -.865  1.00  0.00      DETACH,DWC,PR1DET,PR2DET,XP1DET,XP2DET  ! unused
+
+!*PHENOLOGY PARAMETERS
+!  TB   TO1   TO2    TM                I
+   0.0  20.0  28.0  45.0               1 VEGETATIVE DEVELOPMENT
+   0.0  18.0  28.0  45.0               2 EARLY REPRODUCTIVE DEVELOPMENT
+ -10.0  15.0  30.0  45.0               3 LATE REPRODUCTIVE DEVELOPMENT
+
+!FOLLOWING LINE: STAGE; REF STAGE; PHOTOPERIOD FUNCTION; TEMPERATURE FUNCT;
+!POINTER TO VEGD(1) OR REPDA(2) OR REPDB(3) TEMP SENS; SENS TO WATER;N; AND P
+  1  1  NON  LIN  1 -0.20  0.00  0.00  PLANT(STG 1) TO EMERG(STG 2) PHASE
+  2  2  NON  LIN  1 -0.20  0.00  0.00  EMERG(STG 2) TO V1(STG 3) PHASE
+  3  2  NON  LIN  1 -0.40  0.00  0.00  EMERG(STG 2) TO END JV(STG 4) PHASE
+  4  4  NON  LIN  2 -0.40  0.00  0.00  END JV(STG 4) TO FL IND(STG 5) PHASE
+  5  5  NON  LIN  2 -0.40  0.00  0.00  FL IND(STG 5) TO 1ST FL(STG 6) PHASE
+  6  6  NON  LIN  2 -0.40  0.00  0.00  1ST FL(STG 6) TO 1ST PEG(STG 7) PHASE  ! unused: lettuce harvested before flowering
+  7  6  NON  LIN  2 -0.40  0.00  0.00  1ST FL(STG 6) TO 1ST POD(STG 8) PHASE  ! unused
+  8  6  NON  LIN  2 -0.40  0.00  0.00  1ST FL(STG 6) TO 1ST SD(STG 9) PHASE   ! unused
+  9  9  NON  LIN  3  0.20  0.40  0.00  1ST SD(STG 9) TO LST SD(STG 10) PHASE  ! unused
+ 10  9  NON  LIN  3  0.20  0.40  0.00  1ST SD(STG 9) TO PH MAT(STG 11) PHASE  ! unused
+ 11 11  NON  NON  1  0.00  0.00  0.00  PH MAT(STG 11) TO H-MAT(STG 12) PHASE  ! unused
+ 12  6  NON  LIN  2 -0.60  0.00  0.00  1ST FL(STG 6) TO LST VST(STG 13) PHASE ! unused
+ 13  6  NON  LIN  2 -0.90  0.00  0.00  1ST FL(STG 6) TO LST LF(STG 14) PHASE  ! unused
+
+!*CANOPY HEIGHT AND WIDTH GROWTH PARAMETERS
+
+! VSTAGE, FOLLOWED BY INTERNODE LENGTH PER NODE, THEN CANOPY WIDTH PER NODE
+  0.00  5.00 10.00 15.00 25.00 35.00 42.00 48.00 52.00 56.00  XVSHT(1-10)
+ .0003 .0010 .0020 .0030 .0033 .0030 .0023 .0010 .0003 .0001  YVSHT(1-10)
+ .0005 .0020 .0045 .0065 .0080 .0080 .0065 .0040 .0010 .0001  YVSWH(1-10)
+
+ -50.0  -2.0  10.0  21.0  60.0                       XHWTEM(1-5),TEMPERATURES
+  0.40  0.40  0.50  1.00  1.00                       YHWTEM(1-5),RELATIVE EXPAN
+  0.00  5.00  7.50 10.00 15.00 20.00 30.00 80.00     XHWPAR(1-8),PAR VALUES
+  4.00  2.00  1.50  1.25  1.05  1.00  1.00  1.00     YHWPAR(1-8),RELATIVE EXPAN
+  1.00                                               NHGT
+  
+!*EVAPOTRANSPIRATION
+  0.75   1.0       KEP, EORATIO
+  0.50  0.95       SSKC, SKCBmax ASCE short ref (12 cm grass)
+  0.50  0.79       TSKC, TKCBmax ASCE tall ref (50 cm alfalfa)
+
+
+!*HYDROPONIC NUTRIENT UPTAKE PARAMETERS (SILBERBUSH 2005 BASELINE)
+  0.841  29.400 0.668  31.680 20.0  20.0 10.0    JMAX_NO3, KM_NO3, JMAX_NH4, KM_NH4, KI_NO3, KI_NH4, KI_TIN (mg/cm/d, mg/L)
+! Unit conversion: Vmax[nmol/cm/s]*MW[g/mol]*1000*86400*1e-9 = mg/cm/d
+!   NO3-N: 13.9 nmol/cm/s = 16.82 mg N/cm/d; HATS Km=0.21 mmol/L = 2.94 mg N/L
+!   NH4-N: 18.4 nmol/cm/s = 22.27 mg N/cm/d; HATS Km=0.75 mmol/L = 10.56 mg N/L
+!   Ki values activate optional Haldane inhibition at high concentration.
+!   Ki_TIN adds shared inhibition from total inorganic N (NO3+NH4).
+!   NO3 inhibition is weak (Ki=200 mg/L); NH4 inhibition is stronger (Ki=40 mg/L).
+! NH4 toxicity stress: NTOXS = 1/(1+(NH4_SOL/NH4_TOX_K)^NH4_TOX_N)
+!   NH4_TOX_K: NH4 concentration (mg/L) at which NTOXS=0.5 (half-inhibition)
+!   NH4_TOX_N: Hill coefficient (steepness); n=2 gives smooth sigmoidal response
+!   Calibrated: K=138, n=2.0 -> SIM TRT6/TRT5=0.418 (OBS=0.421, Sharkey 2024)
+!   Note: NTOXS daily rate 0.738 at NH4=82.8mg/L; compounding over 33d gives final biomass ratio
+ 138.00  2.0                      NH4_TOX_K (mg/L), NH4_TOX_N (Hill coeff)
+
+
+!*SOLPI HYDROPONIC P UPTAKE PARAMETERS (SILBERBUSH 2005 BASELINE)
+  7.60 0.155                  JMAX_P, KM_P (mg/cm/d, mg/L) [Silberbush 2005; unit-corrected: 2.84 nmol/cm/s = 7.60 mg P/cm/d]
+
+!*SOLKI HYDROPONIC K UPTAKE PARAMETERS (SILBERBUSH 2005 BASELINE)
+  58.44 0.497                 JMAX_K, KM_K (mg/cm/d, mg/L) [Silberbush 2005; unit-corrected: 17.3 nmol/cm/s = 58.44 mg K/cm/d]
+
+!*PHSTR HYDROPONIC pH STRESS PARAMETERS (Gaussian uptake inhibition by pH deviation)
+  5.75  0.80  0.80  0.50  1.00       PH_OPT, PH_SCALE_NO3, PH_SCALE_NH4, PH_SCALE_P, PH_SCALE_K
+  0.15  0.15  0.20  0.10             PH_KM_ALPHA_NO3, PH_KM_ALPHA_NH4, PH_KM_ALPHA_P, PH_KM_ALPHA_K
+  0.0005                             BGALKAL (mol/L background alkalinity of irrigation water)
+
+!*ECSTR HYDROPONIC EC STRESS PARAMETERS
+  1.20  1.80                         EC_ABS_LOW, EC_ABS_HIGH (absolute optimal EC range in dS/m)
+  0.30  0.70  0.277                  EC_STRESS_MIN, EC_STRESS_SLOPE, EC_DECAY_K (stress curve params)
+  30.0  50.0  0.023  0.0022          C_NA0_5 (mol/m3), K_INHIB_NO3, K_INHIB_K, K_INHIB_P (Na stress)
+
+*PHOSPHORUS CONTENT (optimized for lettuce)
+! Two options for Optimum and minimum P concentrations for shoots:
+! (1) supply values for shoots (leaf plus stem)
+! (2) supply values individually for leaf and for stem
+! If positive values for shoots are supplied, any values supplied for leaf and
+! stem will be ignored.
+   -99.0   -99.0   -99.0  Optimum Shoot Conc (emergence, 1st flower, full seed) OPTSHTP-EM,OPTSHTP-FF,OPTSHTP-FS
+  0.0080  0.0078  0.0076  Optimum Leaf Conc  (emergence, 1st flower, full seed) OPTLFP-EM,OPTLFP-FF,OPTLFP-FS
+  0.0054  0.0049  0.0043  Optimum Stem Conc  (emergence, 1st flower, full seed) OPTSTP-EM,OPTSTP-FF,OPTSTP-FS
+  0.0122  0.0115  0.0104  Optimum Root Conc  (emergence, 1st flower, full seed) OPTRTP-EM,OPTRTP-FF,OPTRTP-FS
+   -99.0  0.0020  0.0015  Optimum Shell Conc (emergence, 1st flower, full seed) OPTSHLP-EM,OPTSHLP-FF,OPTSHLP-FS
+   -99.0  0.0045  0.0050  Optimum Seed Conc  (emergence, 1st flower, full seed) OPTSDP-EM,OPTSDP-FF,OPTSDP-FS
+
+   -99.0   -99.0   -99.0  Minimum Shoot Conc (emergence, 1st flower, full seed) MINSHTP-EM,MINSHTP-FF,MINSHTP-FS
+  0.0030  0.0025  0.0020  Minimum Leaf Conc  (emergence, 1st flower, full seed) MINLFP-EM,MINLFP-FF,MINLFP-FS
+  0.0015  0.0012  0.0010  Minimum Stem Conc  (emergence, 1st flower, full seed) MINSTP-EM,MINSTP-FF,MINSTP-FS
+  0.0012  0.0010  0.0008  Minimum Root Conc  (emergence, 1st flower, full seed) MINRTP-EM,MINRTP-FF,MINRTP-FS
+   -99.0  0.0010  0.0008  Minimum Shell Conc (emergence, 1st flower, full seed) MINSHLP-EM,MINSHLP-FF,MINSHLP-FS
+   -99.0  0.0035  0.0035  Minimum Seed Conc  (emergence, 1st flower, full seed) MINSDP-EM,MINSDP-FF,MINSDP-FS
+
+    10.0     8.0     7.0  Maximum Veg N:P ratio (emergence, 1st flower, full seed)
+     3.5     3.5     3.5  Minimum Veg N:P ratio (emergence, 1st flower, full seed)
+
+    0.35    0.40  SRATPHOTO, SRATPART
+    0.20          FracPMobil - max fraction of P which can be mobilized from leaf & stem / day
+  0.0025          ROOTRAD - radius of cylinder around roots from which soil P can be extracted (m)
+
+*POTAS  Potassium Parameters (optimized for lettuce)
+! Potassium concentrations are typically 5-10x higher than phosphorus
+! K is highly mobile in plants - luxury uptake is common
+! K stress primarily affects stomatal conductance and water use efficiency
+!
+! Two options for Optimum and minimum K concentrations for shoots:
+! (1) supply values for shoots (leaf plus stem)
+! (2) supply values individually for leaf and for stem
+! If positive values for shoots are supplied, any values supplied for leaf and
+! stem will be ignored.
+!
+! K concentrations in % dry matter (divide by 100 for decimal fraction)
+   -99.0   -99.0   -99.0  Optimum Shoot K Conc (emergence, 1st flower, full seed)
+! 3-stage K% targets (Heinen 1994): transplant 7.5% → peak/stable 9.4% from DAS15 onward
+  0.0750  0.0940  0.0940  Optimum Leaf K Conc  (emergence, 1st flower, full seed)
+  0.0900  0.0730  0.0560  Optimum Stem K Conc  (emergence, 1st flower, full seed)
+  0.0850  0.0850  0.0750  Optimum Root K Conc  (emergence, 1st flower, full seed)
+   -99.0  0.0200  0.0150  Optimum Shell K Conc (emergence, 1st flower, full seed)
+   -99.0  0.0080  0.0060  Optimum Seed K Conc  (emergence, 1st flower, full seed)
+
+   -99.0   -99.0   -99.0  Minimum Shoot K Conc (emergence, 1st flower, full seed)
+  0.0100  0.0090  0.0070  Minimum Leaf K Conc  (emergence, 1st flower, full seed)
+  0.0100  0.0090  0.0070  Minimum Stem K Conc  (emergence, 1st flower, full seed)
+  0.0100  0.0090  0.0070  Minimum Root K Conc  (emergence, 1st flower, full seed)
+   -99.0  0.0080  0.0060  Minimum Shell K Conc (emergence, 1st flower, full seed)
+   -99.0  0.0040  0.0030  Minimum Seed K Conc  (emergence, 1st flower, full seed)
+
+! Luxury K concentrations (K can be stored above optimum without benefit)
+  0.1350  0.1100  0.0860  Luxury Shoot K Conc  (emergence, 1st flower, full seed)
+  0.1200  0.1200  0.1000  Luxury Root K Conc   (emergence, 1st flower, full seed)
+
+! N:K ratio constraints (vegetative tissue)
+    3.00    3.50    4.00  Maximum Veg N:K ratio (emergence, 1st flower, full seed)
+    0.35    0.35    0.35  Minimum Veg N:K ratio (emergence, 1st flower, full seed)
+
+! P:K ratio constraints (vegetative tissue)
+    0.20    0.25    0.30  Maximum Veg P:K ratio (emergence, 1st flower, full seed)
+    0.05    0.08    0.10  Minimum Veg P:K ratio (emergence, 1st flower, full seed)
+
+! K stress thresholds (K stress ratio at which stress begins)
+    0.50    0.65  SRATPHOTO_K, SRATSTOM - K stress thresholds for photosyn, stomata
+    0.20          FracKMobil - max fraction of K which can be mobilized per day (higher than P)
+    1.00          FracKUptake - fraction of available soil K used for uptake
+    1.00          KMAX_LUXURY - no luxury storage; KTOTDEM=KTotDem only, tracks opt smoothly

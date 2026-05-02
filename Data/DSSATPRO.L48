@@ -1,0 +1,181 @@
+*** *  DSSAT PROFILE LINUX* ***
+DDB // /usr/local
+DTB // /usr/local
+DTE // /usr/local
+DTO // /usr/local
+DAT // /usr/local
+DPT // /usr/local
+DIM // /usr/local
+DTP // /usr/local
+DPF // /usr/local
+DFO // /usr/local
+DIS // /usr/local
+DDW // /usr/local
+DWG // /usr/local
+DWC // /usr/local
+DDS // /usr/local
+DTS // /usr/local
+DDG // /usr/local
+DCG // /usr/local/TOOLS/GENCALC GENCALC2.EXE
+DGL // /usr/local/TOOLS/GLUE GLUE.BAT
+DPM // /usr/local
+DDE // /usr/local
+TOG // /usr/local/TOOLS/GBUILD GBUILD.EXE
+
+MAL // /usr/local dscsm048 PRFRM048
+MBA // /usr/local dscsm048 CSCER048
+MBH // /usr/local dscsm048 PRFRM048
+MBM // /usr/local dscsm048 PRFRM048
+MBN // /usr/local dscsm048 CRGRO048
+MBR // /usr/local dscsm048 PRFRM048
+MBS // /usr/local dscsm048 BSCER048
+MCB // /usr/local dscsm048 CRGRO048
+MCH // /usr/local dscsm048 CRGRO048
+MCN // /usr/local dscsm048 CRGRO048
+MCO // /usr/local dscsm048 CRGRO048
+MCP // /usr/local dscsm048 CRGRO048
+MCS // /usr/local dscsm048 CSYCA048
+MFA // /usr/local dscsm048 CRGRO048
+MFB // /usr/local dscsm048 CRGRO048
+MGB // /usr/local dscsm048 CRGRO048
+MGG // /usr/local dscsm048 PRFRM048
+MLT // /usr/local dscsm048 CRGRO048
+MLU // /usr/local dscsm048 CRGRO048
+MML // /usr/local dscsm048 MLCER048
+MMZ // /usr/local dscsm048 MZCER048
+MNP // /usr/local dscsm048 CRGRO048
+MPI // /usr/local dscsm048 PIALO048
+MPN // /usr/local dscsm048 CRGRO048
+MPP // /usr/local dscsm048 CRGRO048
+MPR // /usr/local dscsm048 CRGRO048
+MPT // /usr/local dscsm048 PTSUB048
+MRI // /usr/local dscsm048 RICER048
+MSB // /usr/local dscsm048 CRGRO048
+MSC // /usr/local dscsm048 SCCAN048
+MSF // /usr/local dscsm048 CRGRO048
+MSG // /usr/local dscsm048 SGCER048
+MSI // /usr/local
+MSU // /usr/local dscsm048 CRGRO048
+MSW // /usr/local dscsm048 SWCER048
+MTF // /usr/local dscsm048 TFAPS048
+MTM // /usr/local dscsm048 CRGRO048
+MTN // /usr/local dscsm048 TNARO048
+MTR // /usr/local dscsm048 TRARO048
+MVB // /usr/local dscsm048 CRGRO048
+MWH // /usr/local dscsm048 CSCER048
+MOT // /usr/local
+MU1 // /usr/local
+MU2 // /usr/local
+MIO // /usr/local
+MLO // /usr/local
+
+MGR // /usr/local
+NSH // /usr/local
+ASP // /usr/local
+ASS // /usr/local dscsm048
+ASA // /usr/local VARAN2.EXE
+AGR // /usr/local
+AQS // /usr/local dscsm048
+AQA // /usr/local SUSTAIN2.EXE
+ASX // /usr/local
+APS // /usr/local dscsm048
+APV // /usr/local
+APM // /usr/local
+APA // /usr/local VARAN2.EXE
+APJ // /usr/local
+APF // /usr/local
+APP // /usr/local
+APK // /usr/local DISC9801.EXE
+TOE // /WINDOWS NOTEPAD.EXE
+TOS // /
+TOM // /
+STD // /usr/local/StandardData
+WED // /usr/local/Weather
+WGD // /usr/local/Weather/Gen
+CLD // /usr/local/Weather/Climate
+WMD // /usr/local/Weather/Month
+SLD // /usr/local/Soil
+CRD // /usr/local/Genotype
+FID // /usr/local/Background
+ALD // /usr/local/Alfalfa
+GCD // /usr/local/GCWork
+GUD // /usr/local/GLWork
+BAD // /usr/local/Barley
+BHD // /usr/local/Bahia
+BMD // /usr/local/Bermudagrass
+BND // /usr/local/Drybean
+BRD // /usr/local/Brachiaria
+BSD // /usr/local/Sugarbeet
+CBD // /usr/local/Cabbage
+CHD // /usr/local/Chickpea
+CND // /usr/local/Canola
+COD // /usr/local/Cotton
+CPD // /usr/local/Cowpea
+CSD // /usr/local/Cassava
+FAD // /usr/local/Fallow
+FBD // /usr/local/Fababean
+GBD // /usr/local/GreenBean
+GGD // /usr/local/Guineagrass
+LTD // /usr/local/Lentil
+LUD // /usr/local/Lettuce
+MLD // /usr/local/PearlMillet
+MZD // /usr/local/Maize
+NPD // /usr/local/Napier
+PED // /usr/local/Pea
+PID // /usr/local/Pineapple
+PND // /usr/local/Peanut
+POD // /usr/local/PerennialPeanut
+PPD // /usr/local/Pigeonpea
+PRD // /usr/local/BellPepper
+PTD // /usr/local/Potato
+RID // /usr/local/Rice
+SBD // /usr/local/Soybean
+SCD // /usr/local/Sugarcane
+SFD // /usr/local/Safflower
+SGD // /usr/local/Sorghum
+SID // /usr/local
+SUD // /usr/local/Sunflower
+SWD // /usr/local/SweetCorn
+TFD // /usr/local/Teff
+TMD // /usr/local/Tomato
+TND // /usr/local/Tanier
+TRD // /usr/local/Taro
+VBD // /usr/local/Velvetbean
+WHD // /usr/local/Wheat
+U1D // /usr/local/CROP1
+U2D // /usr/local/CROP2
+OTD // /
+ASD // /usr/local/Seasonal
+AQD // /usr/local/Sequence
+APD // /usr/local/Spatial
+PSD // /usr/local/Pest
+ECD // /usr/local/Economic
+TOD // /
+
+MQU // /usr/local dscsm048 CRGRO048
+QUD // /usr/local/Quinoa
+ACC // /usr/local dscsm048
+CCD // /usr/local/ClimateChange
+AYF // /usr/local dscsm048
+YFD // /usr/local/YieldForecast
+SRD // /usr/local/Strawberry
+MSR // /usr/local dscsm048 CRGRO048
+CID // /usr/local/Chia
+MCI // /usr/local dscsm048 CRGRO048
+MPE // /usr/local dscsm048 CRGRO048
+MPO // /usr/local dscsm048 PRFRM048
+MSS // /usr/local dscsm048 CRGRO048
+SSD // /usr/local/Sesame
+
+MBC // /usr/local dscsm048 CRGRO048
+BCD // /usr/local/Carinata
+MGY // /usr/local dscsm048 CRGRO048
+GYD // /usr/local/Guar
+MBG // /usr/local dscsm048 CRGRO048
+BGD // /usr/local/BambaraGroundnut
+MAM // /usr/local dscsm048 CRGRO048
+AMD // /usr/local/Amaranth
+MHM // /usr/local dscsm048 CRGRO048
+HMD // /usr/local/Hemp
+MRY // /usr/local dscsm048 CSCER048
+RYD // /usr/local/Rye
