@@ -473,7 +473,7 @@ C-----------------------------------------------------------------------
           ECSTRESS_JMAX_K = EC_STRESS_LOW
           ECSTRESS_JMAX_P = EC_STRESS_LOW
           ECSTRESS_KM_NO3 = 1.0  ! No competitive effect without Na
-          ECSTRESS_ROOT = EC_STRESS_LOW
+          ECSTRESS_ROOT = 1.0    ! Low-EC does not suppress root elongation
           ECSTRESS_LEAF = EC_STRESS_LOW
           ECSTRESS_TRANSP = EC_STRESS_HIGH
         ENDIF
@@ -526,9 +526,13 @@ C-----------------------------------------------------------------------
         ENDIF
 
         IF (AUTO_CONC_MODE .NE. 'N') THEN
+C         Also trigger if NO3 drops below 5% of initial (handles cases where
+C         P/K maintain EC above threshold even though N is depleted)
           IF ((AUTO_CONC_MODE .EQ. 'O' .AND. EC_CALC .LT. EC_OPT_LOW)
      &   .OR. (AUTO_CONC_MODE .EQ. 'I' .AND.
-     &         EC_CALC .LT. EC_CALC_INIT * 0.99)) THEN
+     &         (EC_CALC .LT. EC_CALC_INIT * 0.99 .OR.
+     &          (NO3_INIT .GT. 1.0 .AND.
+     &           NO3_CONC .LT. NO3_INIT * 0.05)))) THEN
 C           Scale initial concentrations proportionally to reach feed target.
             TotalIons = (NO3_INIT+NH4_INIT+P_INIT+K_INIT) * 2.5
             EC_RATIO = TotalIons / EC_FACTOR

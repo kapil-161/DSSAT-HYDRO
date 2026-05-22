@@ -114,7 +114,7 @@ C=======================================================================
       REAL    AUTO_PH_R, AUTO_VOL_R, AUTO_CONC_R, AUTO_O2_R  ! Control flags as REAL for PUT
       REAL    SOLVOL,SOLVOL_L,EC_SOL,PH_SOL,DO2,TEMP_SOL
       REAL    NO3_CONC,NH4_CONC,P_CONC,K_CONC
-      REAL    CHLEN, CHSPC
+      REAL    CHLEN
 
       LOGICAL FEXIST, UseSimCtr, SimLevel
 
@@ -898,13 +898,12 @@ C-----------------------------------------------------------------------
      &    SOLVOL,EC_SOL,PH_SOL,DO2,TEMP_SOL,
      &    NO3_CONC,NH4_CONC,P_CONC,K_CONC,ISWHYDRO,
      &    AUTO_PH,AUTO_VOL,AUTO_CONC,AUTO_O2,
-     &    CHLEN,CHSPC)
+     &    CHLEN)
 
 C     Store hydroponic switch in ISWITCH structure for global access
       ISWITCH % ISWHYDRO = ISWHYDRO
       ISWITCH % AUTO_PH = AUTO_PH  ! Store pH control flag
       ISWITCH % CHLEN = CHLEN      ! NFT channel length (cm)
-      ISWITCH % CHSPC = CHSPC      ! NFT channel spacing (cm)
 C     Store updated ISWITCH so all modules can read ISWHYDRO via GET(ISWITCH)
       CALL PUT(ISWITCH)
 
@@ -936,7 +935,6 @@ C       Store SOLVOL directly in mm (no conversion needed)
         CALL PUT('HYDRO','P_CONC',P_CONC)
         CALL PUT('HYDRO','K_CONC',K_CONC)
         CALL PUT('HYDRO','CHLEN',CHLEN)
-        CALL PUT('HYDRO','CHSPC',CHSPC)
         CALL PUT('HYDRO','AREA',AREA)
 C       Store hydroponic control flags as REAL values
 C       AUTO_PH/VOL: 1.0 = maintain constant ('Y'), 0.0 = allow drift ('N')

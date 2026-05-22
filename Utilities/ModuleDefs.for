@@ -123,7 +123,6 @@ C             CHP Added TRTNUM to CONTROL variable.
         CHARACTER (len=1) ISWHYDRO  !Hydroponic switch
         CHARACTER (len=1) AUTO_PH   !Hydroponic pH control: Y=constant, N=drift
         REAL CHLEN                  !NFT channel length (cm)
-        REAL CHSPC                  !NFT channel spacing (cm)
         CHARACTER (len=1) MEEVP, MEGHG, MEHYD, MEINF, MELI, MEPHO
         CHARACTER (len=1) MESOM, MESOL, MESEV, MEWTH
         CHARACTER (len=1) METMP !Temperature, EPIC
@@ -577,7 +576,6 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL PH_KM_FACTOR_P     ! P Km adjustment factor
         REAL PH_KM_FACTOR_K     ! K Km adjustment factor
         REAL CHLEN              ! NFT channel length (cm)
-        REAL CHSPC              ! NFT channel spacing (cm)
         REAL SOLVOL_INIT        ! Initial solution volume (mm) for AUTO_VOL
         REAL O2_STRESS          ! Dissolved O2 stress factor (0-1)
         REAL AUTO_O2            ! Auto O2 control flag (1.0=pin to init, 0.0=dynamic)
@@ -918,7 +916,6 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('PH_KM_FACTOR_P');   Value = SAVE_data % HYDRO % PH_KM_FACTOR_P
         Case ('PH_KM_FACTOR_K');   Value = SAVE_data % HYDRO % PH_KM_FACTOR_K
         Case ('CHLEN');       Value = SAVE_data % HYDRO % CHLEN
-        Case ('CHSPC');       Value = SAVE_data % HYDRO % CHSPC
         Case ('SOLVOL_INIT'); Value = SAVE_data % HYDRO % SOLVOL_INIT
         Case ('O2_STRESS');   Value = SAVE_data % HYDRO % O2_STRESS
         Case ('AUTO_O2');     Value = SAVE_data % HYDRO % AUTO_O2
@@ -1118,7 +1115,6 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('PH_KM_FACTOR_P');   SAVE_data % HYDRO % PH_KM_FACTOR_P = Value
         Case ('PH_KM_FACTOR_K');   SAVE_data % HYDRO % PH_KM_FACTOR_K = Value
         Case ('CHLEN');       SAVE_data % HYDRO % CHLEN = Value
-        Case ('CHSPC');       SAVE_data % HYDRO % CHSPC = Value
         Case ('SOLVOL_INIT'); SAVE_data % HYDRO % SOLVOL_INIT = Value
         Case ('O2_STRESS');   SAVE_data % HYDRO % O2_STRESS = Value
         Case ('AUTO_O2');     SAVE_data % HYDRO % AUTO_O2 = Value

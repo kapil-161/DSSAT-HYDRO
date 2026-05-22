@@ -52,6 +52,10 @@ C     Local variables - all in mm
 C     Concentration correction variables
       REAL CONC_FACTOR    ! Concentration factor from volume reduction (>= 1.0)
       REAL NO3_CONC, NH4_CONC, P_CONC, K_CONC  ! mg/L
+C     Root-dependent water uptake variables
+      REAL TRLV           ! Total root length volume (cm root/cm2 ground)
+      REAL RWUMX_HYDRO    ! Max water uptake per root length (cm3/cm root/d)
+      REAL ROOT_SUPPLY_MM ! Root-limited water supply (mm/d)
       INTEGER DYNAMIC
       CHARACTER*1 IDETL   ! Detail level for output
 
@@ -94,6 +98,9 @@ C       Get AUTO_VOL flag (1.0 = Y = constant volume, 0.0 = N = drift)
         CALL GET('HYDRO','AUTO_VOL',AUTO_VOL_R)
         IF (AUTO_VOL_R .LT. 0.0) AUTO_VOL_R = 0.0  ! Default to drift
 
+C       RWUMX from lettuce species file (cm3 water / cm root / d)
+        RWUMX_HYDRO = 0.04
+
         IF (IDETL .EQ. 'D') THEN
           WRITE(*,100) SOLVOL_MM, AUTO_VOL_R
  100      FORMAT(/,' Hydroponic water module initialized',
@@ -120,9 +127,17 @@ C       Get current solution depth in mm
 C       Get growing area from experimental file (*FIELDS section)
         CALL GET('HYDRO','AREA',GROWING_AREA)
 
-C       TRWUP = EP — unlimited supply, potential = demand
-C       EP=0 at RATE call time; SPAM RATE overrides TRWU = EP at line 627
-        TRWUP_MM = EP   ! mm/d
+C       Root-limited potential supply (analogous to ROOTWU in soil mode)
+C       RWUMX_HYDRO (cm3/cm root/d) * TRLV (cm root/cm2) * 10 = mm/d
+C       In RATE phase EP=0 is passed; TRWUP is the potential supply for stress calc
+C       TRLV = 0 before roots initialize: use a large number (unlimited)
+        CALL GET('HYDRO','TRLV',TRLV)
+        IF (TRLV .LE. 0.0) THEN
+          ROOT_SUPPLY_MM = 1000.0  ! Unlimited — no root data yet
+        ELSE
+          ROOT_SUPPLY_MM = RWUMX_HYDRO * TRLV * 10.0  ! mm/d
+        ENDIF
+        TRWUP_MM = ROOT_SUPPLY_MM  ! Potential supply (not capped by EP here)
         TRWUP    = TRWUP_MM * 0.1  ! cm/d
 
 C       Store potential supply for INTEGR phase (in mm/d)
@@ -153,18 +168,27 @@ C       EP is already in mm/d (rate per unit area)
 C       Store EP for nutrient uptake module (for mass flow calculations)
         CALL PUT('HYDRO','EP',EP)
 
-C       In hydroponics, water is unlimited: actual uptake = full demand
-C       EC stress acts on nutrient kinetics and growth via ECSTRESS factors
-C       in SOLEC, not through the water uptake factor (WUF)
-        TRWU_MM = PLANT_DEMAND_MM  ! Tank drained by full transpiration
-        WUF = 1.0                   ! No water stress
+C       Root-limited actual uptake: recompute supply with actual EP
+C       Matches soil mode logic: no roots → no uptake (WUF < 1 = water stress)
+C       TRLV = 0 before roots initialize (day 1): unlimited supply
+        CALL GET('HYDRO','TRLV',TRLV)
+        IF (TRLV .LE. 0.0) THEN
+          ROOT_SUPPLY_MM = PLANT_DEMAND_MM  ! No root data — unlimited
+          TRWUP_MM = PLANT_DEMAND_MM
+        ELSE
+          ROOT_SUPPLY_MM = RWUMX_HYDRO * TRLV * 10.0  ! mm/d
+          TRWUP_MM = MIN(PLANT_DEMAND_MM, ROOT_SUPPLY_MM)
+        ENDIF
+        TRWU_MM = TRWUP_MM
+        IF (PLANT_DEMAND_MM .GT. 0.0) THEN
+          WUF = MIN(1.0, TRWU_MM / PLANT_DEMAND_MM)
+        ELSE
+          WUF = 1.0
+        ENDIF
 
-C       Get potential supply from RATE phase for reporting only
-        CALL GET('HYDRO','TRWUP_MM',TRWUP_MM)
-
-C       Convert to cm/d for output (TRWU is in cm/d per unit area)
-C       EP is already per unit area, so just convert mm to cm
-        TRWU = TRWU_MM * 0.1  ! cm/d (per unit area)
+C       Convert to cm/d for output (TRWU, TRWUP in cm/d per unit area)
+        TRWUP = ROOT_SUPPLY_MM * 0.1  ! cm/d potential (root-limited supply)
+        TRWU  = TRWU_MM * 0.1         ! cm/d actual (= MIN of demand and supply)
 
 C       Plant uptake in mm/d (for depth balance)
         PLANT_UPTAKE_MM = TRWU_MM  ! mm/d

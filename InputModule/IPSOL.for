@@ -16,7 +16,7 @@ C-----------------------------------------------------------------------
      &                  SOLVOL,EC,PH,DO2,TEMP,
      &                  NO3_CONC,NH4_CONC,P_CONC,K_CONC,ISWHYDRO,
      &                  AUTO_PH,AUTO_VOL,AUTO_CONC,AUTO_O2,
-     &                  CHLEN,CHSPC)
+     &                  CHLEN)
 
       IMPLICIT NONE
       EXTERNAL ERROR, FIND, FIND2, IGNORE
@@ -30,7 +30,7 @@ C-----------------------------------------------------------------------
       INTEGER LUNEXP,LNSOL,LNCTL,LN,LINEXP,ISECT,IFIND,ERRNUM
       REAL    SOLVOL,EC,PH,DO2,TEMP
       REAL    NO3_CONC,NH4_CONC,P_CONC,K_CONC
-      REAL    CHLEN, CHSPC
+      REAL    CHLEN
 
       PARAMETER (ERRKEY='IPSOL ')
                  FINDCH='*HYDRO'
@@ -49,7 +49,6 @@ C     Initialize values to -99 (missing data indicator)
       P_CONC = -99.0
       K_CONC = -99.0
       CHLEN = -99.0
-      CHSPC = -99.0
 
 C     Default: Hydroponic mode is OFF
       ISWHYDRO = 'N'
@@ -79,12 +78,12 @@ C     Read the data line
  50   CALL IGNORE (LUNEXP,LINEXP,ISECT,CHARTEST)
 
       IF (ISECT .EQ. 1) THEN
-C        Try reading with CHLEN and CHSPC first
+C        Read solution parameters including CHLEN
          READ (CHARTEST,*,IOSTAT=ERRNUM) LN,SOLVOL,EC,PH,DO2,TEMP,
-     &        NO3_CONC,NH4_CONC,P_CONC,K_CONC,CHLEN,CHSPC
+     &        NO3_CONC,NH4_CONC,P_CONC,K_CONC,CHLEN
 
          IF (ERRNUM .NE. 0) THEN
-C          CHLEN and CHSPC are required for hydroponic experiments
+C          CHLEN is required for hydroponic experiments
            CALL ERROR (ERRKEY,ERRNUM,FILEX,LINEXP)
          ENDIF
 
@@ -103,7 +102,7 @@ C       Valid hydroponic parameters - activate HYDROPONIC mode
 C       Print confirmation message to indicate section was read
 C       SOLVOL is in mm from experiment file
         WRITE(*,100) SOLVOL,EC,PH,DO2,TEMP,NO3_CONC,NH4_CONC,P_CONC,
-     &               K_CONC,CHLEN,CHSPC
+     &               K_CONC,CHLEN
       ELSE
 C       SOLVOL <= 0 or -99: This treatment is soil-based
 C       Keep ISWHYDRO = 'N' and return silently
@@ -185,8 +184,7 @@ C-----------------------------------------------------------------------
      &        /,'   NH4-N            : ',F10.2,' mg/L',
      &        /,'   P                : ',F10.2,' mg/L',
      &        /,'   K                : ',F10.2,' mg/L',
-     &        /,'   Channel Length   : ',F10.1,' cm',
-     &        /,'   Channel Spacing  : ',F10.1,' cm',/)
+     &        /,'   Channel Length   : ',F10.1,' cm',/)
 
  110  FORMAT (' HYDROPONIC CONTROL SETTINGS:',
      &        /,'   AUTO_PH  : ',A1,' (Y=constant, N=drift)',

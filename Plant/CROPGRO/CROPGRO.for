@@ -720,10 +720,20 @@ C-----------------------------------------------------------------------
 !     In soil mode: calculate based on TRWUP vs EOP
 !***********************************************************************
       IF (ISWHYDRO .EQ. 'Y') THEN
-!       HYDROPONIC MODE: No water stress - unlimited water from solution
+!       HYDROPONIC MODE: Water stress depends on root supply vs transpiration demand
+!       TRWUP = root-limited potential supply (cm/d); EOP = potential transpiration (mm/d)
         SWFAC  = 1.0
         TURFAC = 1.0
-      ELSEIF (YRDOY .GT. YREMRG .AND. YREMRG .GT. 0 
+        IF (EOP .GT. 0.001) THEN
+          EP1 = EOP * 0.1
+          IF (TRWUP / EP1 .LT. RWUEP1) THEN
+            TURFAC = (1./RWUEP1) * TRWUP / EP1
+          ENDIF
+          IF (EP1 .GE. TRWUP) THEN
+            SWFAC = TRWUP / EP1
+          ENDIF
+        ENDIF
+      ELSEIF (YRDOY .GT. YREMRG .AND. YREMRG .GT. 0
      &                    .AND. ISWWAT .EQ. 'Y') THEN
 !       SOIL MODE: Calculate daily water stress factors (from SWFACS)
 !       EOP in mm/d

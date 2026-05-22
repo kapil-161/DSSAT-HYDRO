@@ -167,7 +167,7 @@ C-----------------------------------------------------------------------
 !       Calculate new root growth based on photosynthate allocation
         RLNEW = WRDOTN * RFAC1 / 10000.
 
-C       Apply EC stress to root growth (morphological suppression)
+C       Apply EC stress to root growth (Na toxicity at high EC only)
         CALL GET('HYDRO','ECSTRESS_ROOT',ECSTRESS_ROOT)
         IF (ECSTRESS_ROOT .LT. 0.1) ECSTRESS_ROOT = 1.0
         RLNEW = RLNEW * ECSTRESS_ROOT
