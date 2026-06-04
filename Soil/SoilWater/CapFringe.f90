@@ -62,6 +62,8 @@
     ThetaCap = DUL
     ! If there is no water table, return
     IF (ActWTD < 1.E-6 .OR. ActWTD > 9999.) RETURN
+    ! If VG parameters are invalid (e.g. hydroponic dummy soil), return
+    IF (ANY(nVG(1:NLAYR) < 1.E-6) .OR. ANY(alphaVG(1:NLAYR) < 1.E-6)) RETURN
     Se_boundary = -99.
     !JZW: need to set Se_boundary for L=NLAYR:
     ! If there is water table, calculate theta for all layers
