@@ -242,3 +242,48 @@ C=======================================================================
       RETURN
       END SUBROUTINE TWILIGHT
 C=======================================================================
+
+
+C=======================================================================
+C  DAYLEN_H, Subroutine
+C  Derives daylength, sunrise and sunset from hourly radiation array.
+C  Used in hourly weather mode (MEWTH='H') for controlled environments
+C  where lamp schedule replaces astronomical photoperiod calculation.
+C-----------------------------------------------------------------------
+C  Called by: WEATHR
+C  Calls:     None
+C=======================================================================
+
+      SUBROUTINE DAYLEN_H(RADHR, DAYL, SNUP, SNDN)
+
+      USE ModuleDefs
+      IMPLICIT NONE
+
+      REAL, DIMENSION(TS), INTENT(IN)  :: RADHR
+      REAL,                INTENT(OUT) :: DAYL, SNUP, SNDN
+
+      INTEGER H
+      REAL    TINCR
+      PARAMETER (TINCR = 24.0/TS)
+
+      SNUP = 25.0
+      SNDN =  0.0
+
+      DO H = 1, TS
+        IF (RADHR(H) .GT. 0.0) THEN
+          IF (REAL(H)*TINCR - TINCR .LT. SNUP) SNUP = REAL(H)*TINCR - TINCR
+          IF (REAL(H)*TINCR         .GT. SNDN) SNDN = REAL(H)*TINCR
+        ENDIF
+      ENDDO
+
+      IF (SNUP .GT. 24.0) THEN
+        SNUP = 0.0
+        SNDN = 0.0
+        DAYL = 0.0
+      ELSE
+        DAYL = SNDN - SNUP
+      ENDIF
+
+      RETURN
+      END SUBROUTINE DAYLEN_H
+C=======================================================================

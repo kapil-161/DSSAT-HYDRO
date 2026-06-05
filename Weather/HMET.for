@@ -46,7 +46,7 @@ C=======================================================================
      &    TGROAV, TGRODY, WINDHR)                         !Output
 
 !-----------------------------------------------------------------------
-      USE ModuleDefs     !Definitions of constructed variable types, 
+      USE ModuleDefs     !Definitions of constructed variable types,
                          ! which contain control information, soil
                          ! parameters, hourly weather data.
 !     TS defined in ModuleDefs.for
@@ -63,7 +63,8 @@ C=======================================================================
      &  HS,ISINB,PAR,REFHT,S0N,SRAD,SNDN,SNUP,HSRAD,
      &  TAVG,TDAY,TDEW,TGROAV,TGRODY,TINCR,TMAX,TMIN,HTMAX,HTMIN,
      &  HTDEW,HTDEW_SUM,RH,VPSAT,WINDAV,WINDHT,WINDSP,
-     &  XLAT
+     &  XLAT, SNUP_H, SNDN_H, TMPRAD,
+     &  HTMAX_RAW, HTMIN_RAW, TMAX_OFF, TMIN_OFF
       PARAMETER (TINCR=24./TS)
 
 !-----------------------------------------------------------------------
@@ -73,6 +74,41 @@ C     Initialize
       NDAY = 0
       HTDEW_SUM = 0.0
       WINDAV = WINDSP / 86.4 * (REFHT/WINDHT)**0.2
+
+C     For hourly weather mode, pre-read all RADHR values and derive
+C     actual light-on/off hours from the data, bypassing astronomical
+C     sunrise/sunset (needed for controlled-environment / hydroponics).
+C     Also compute temperature offsets so that EMAX/EMIN environment
+C     modifications are correctly applied to hourly temperatures.
+      IF (MEWTH .EQ. 'H') THEN
+        SNUP_H = 25.0
+        SNDN_H = 0.0
+        DO H = 1,TS
+          CALL fio % get('WTH', YRDOY, H, 'SRADJ', TMPRAD)
+          IF (TMPRAD .GT. 0.0) THEN
+            HS = REAL(H) * TINCR
+            IF (HS .LT. SNUP_H) SNUP_H = HS - TINCR
+            IF (HS .GT. SNDN_H) SNDN_H = HS
+          ENDIF
+        ENDDO
+        IF (SNUP_H .GT. 24.0) THEN
+          SNUP_H = SNUP
+          SNDN_H = SNDN
+        ENDIF
+
+C       Read raw daily TMAX/TMIN from file (hour 1) and compute
+C       offset vs WTHMOD-modified TMAX/TMIN so EMAX/EMIN applies
+C       correctly to hourly temperatures in controlled environments.
+        CALL fio % get('WTH', YRDOY, 1, 'TMAX', HTMAX_RAW)
+        CALL fio % get('WTH', YRDOY, 1, 'TMIN', HTMIN_RAW)
+        TMAX_OFF = TMAX - HTMAX_RAW
+        TMIN_OFF = TMIN - HTMIN_RAW
+      ELSE
+        SNUP_H = SNUP
+        SNDN_H = SNDN
+        TMAX_OFF = 0.0
+        TMIN_OFF = 0.0
+      ENDIF
 
 C     Loop to compute hourly weather data.
       DO H = 1,TS
@@ -84,7 +120,7 @@ C       Calculate sun angles and hourly weather variables.
         CALL HANG(
      &    DEC, HS, XLAT,                                  !Input
      &    AZZON(H), BETA(H))                              !Output
-        
+
         IF(MEWTH .NE. 'H') THEN
           CALL HTEMP(
      &      DAYL, HS, SNDN, SNUP, TMAX, TMIN,               !Input
@@ -94,6 +130,8 @@ C       Calculate sun angles and hourly weather variables.
           CALL fio % get('WTH', YRDOY, H, 'TMAX', HTMAX)
           CALL fio % get('WTH', YRDOY, H, 'TMIN', HTMIN)
           CALL fio % get('WTH', YRDOY, H, 'TDEW', HTDEW)
+          HTMAX = HTMAX + TMAX_OFF
+          HTMIN = HTMIN + TMIN_OFF
           TAIRHR(H) = (HTMAX + HTMIN) / 2
           RH = VPSAT(HTDEW) / VPSAT(TAIRHR(H)) * 100.0
           HTDEW_SUM = HTDEW_SUM + HTDEW
@@ -102,7 +140,7 @@ C       Calculate sun angles and hourly weather variables.
         RHUMHR(H) = MIN(RH,100.0)
 
         CALL HWIND(
-     &    DAYL, HS, SNDN, SNUP, WINDAV,                   !Input
+     &    DAYL, HS, SNDN_H, SNUP_H, WINDAV,               !Input
      &    WINDHR(H))                                      !Output
 
         IF(MEWTH .NE. 'H') THEN
@@ -112,18 +150,23 @@ C       Calculate sun angles and hourly weather variables.
         ELSE
           CALL fio % get('WTH', YRDOY, H, 'SRADJ', RADHR(H))
         ENDIF
-        
+
         CALL FRACD(
-     &    BETA(H), CLOUDS, HS, RADHR(H), S0N, SNDN, SNUP, !Input
+     &    BETA(H), CLOUDS, HS, RADHR(H), S0N, SNDN_H,SNUP_H,!Input
+     &    MEWTH,                                           !Input
      &    AMTRH(H), FRDIFP(H), FRDIFR(H))                 !Output
 
         CALL HPAR(
-     &    HS, PAR, RADHR(H), SNDN, SNUP, SRAD,            !Input
+     &    HS, PAR, RADHR(H), SNDN_H, SNUP_H, SRAD,        !Input
      &    PARHR(H))                                       !Output
 
         TAVG = TAVG + TAIRHR(H)
 
-        IF (H .GE. SNUP .AND. H .LE. SNDN) THEN
+        IF (RADHR(H) .GT. 0.0 .AND. MEWTH .EQ. 'H') THEN
+          TDAY = TDAY + TAIRHR(H)
+          NDAY = NDAY + 1
+        ELSE IF (MEWTH .NE. 'H' .AND.
+     &           H .GE. SNUP .AND. H .LE. SNDN) THEN
           TDAY = TDAY + TAIRHR(H)
           NDAY = NDAY + 1
         ENDIF
@@ -135,7 +178,11 @@ C       Calculate sun angles and hourly weather variables.
       ENDIF
 
       TAVG = TAVG / REAL(TS)
-      TDAY = TDAY / REAL(NDAY)
+      IF (NDAY .GT. 0) THEN
+        TDAY = TDAY / REAL(NDAY)
+      ELSE
+        TDAY = TAVG
+      ENDIF
 
       TGRODY = TDAY
       TGROAV = TAVG
@@ -411,15 +458,33 @@ C=======================================================================
 
       SUBROUTINE FRACD(
      &    BETA, CLOUDS, HS, RADHR, S0N, SNDN, SNUP,       !Input
+     &    MEWTH,                                           !Input
      &    AMTRH, FRDIFP, FRDIFR)                          !Output
 
 !-----------------------------------------------------------------------
       IMPLICIT NONE
+      CHARACTER*1 MEWTH
       REAL AMTRH,BETA,CLOUDS,CORR,COS90B,COSB,FRDFH,FRDIFP,
      &  FRDIFR,HS,PI,RAD,RADHR,S0,S0N,SDF,SINB,SNDN,SNUP
       PARAMETER (PI = 3.14159, RAD = PI/180.0)
 
 !-----------------------------------------------------------------------
+C     For hourly weather (controlled environment), lamps emit isotropically
+C     and have no relationship to sun angle. Set radiation as fully diffuse
+C     so canopy light distribution is computed correctly for growth chambers.
+      IF (MEWTH .EQ. 'H') THEN
+        IF (HS .GT. SNUP .AND. HS .LT. SNDN) THEN
+          AMTRH  = 1.0
+          FRDIFR = 1.0
+          FRDIFP = 1.0
+        ELSE
+          AMTRH  = 0.0
+          FRDIFR = 1.0
+          FRDIFP = 1.0
+        ENDIF
+        RETURN
+      ENDIF
+
 C     Daylight hour calculations
       IF (HS .GT. SNUP .AND. HS .LT. SNDN) THEN
 

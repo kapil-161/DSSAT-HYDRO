@@ -51,8 +51,9 @@ C=======================================================================
       USE Forecast
 
       IMPLICIT NONE
-      EXTERNAL INCDAT, YR_DOY, ERROR, WARNING, IPWTH, WTHMOD, WGEN, 
-     &  DAYLEN, CO2VAL, SOLAR, CALC_TDEW, HMET, OPWEATH, TWILIGHT
+      EXTERNAL INCDAT, YR_DOY, ERROR, WARNING, IPWTH, WTHMOD, WGEN,
+     &  DAYLEN, CO2VAL, SOLAR, CALC_TDEW, HMET, OPWEATH, TWILIGHT,
+     &  DAYLEN_H
       SAVE
 
       CHARACTER*1  MEWTH, RNMODE
@@ -303,10 +304,16 @@ C     Calculate hourly weather data.
      &    RADHR, RHUMHR, TAIRHR, TAVG, TDAY, TGRO,        !Output
      &    TGROAV, TGRODY, WINDHR)                         !Output
 
+C     For hourly weather, derive DAYL/SNUP/SNDN from actual lit hours
+C     in RADHR so output and downstream calcs reflect chamber schedule.
+      IF (MEWTH .EQ. 'H') THEN
+        CALL DAYLEN_H(RADHR, DAYL, SNUP, SNDN)
+      ENDIF
+
 C     Compute daily normal temperature.
       TA = TAV - SIGN(1.0,XLAT) * TAMP * COS((DOY-20.0)*RAD)
 
-      CALL OpWeath(CONTROL, ISWITCH, 
+      CALL OpWeath(CONTROL, ISWITCH,
      &    CLOUDS, CO2, DAYL, FYRDOY, OZON7, PAR, RAIN,    !Daily values
      &    SRAD, TAVG, TDAY, TDEW, TGROAV, TGRODY,         !Daily values
      &    TMAX, TMIN, TWILEN, WINDSP, WEATHER)            !Daily values
@@ -440,6 +447,11 @@ C     Calculate hourly weather data.
      &    AMTRH, AZZON, BETA, FRDIFP, FRDIFR, PARHR,      !Output
      &    RADHR, RHUMHR, TAIRHR, TAVG, TDAY, TGRO,        !Output
      &    TGROAV, TGRODY, WINDHR)                         !Output
+
+C     For hourly weather, derive DAYL/SNUP/SNDN from actual lit hours.
+      IF (MEWTH .EQ. 'H') THEN
+        CALL DAYLEN_H(RADHR, DAYL, SNUP, SNDN)
+      ENDIF
 
 C     Compute daily normal temperature.
       TA = TAV - SIGN(1.0,XLAT) * TAMP * COS((DOY-20.0)*RAD)
