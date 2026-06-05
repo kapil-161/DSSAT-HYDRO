@@ -28,4 +28,8 @@ C         HFER_FAMK : K to add
         REAL :: HFER_FAMP(NAPPL)
         REAL :: HFER_FAMK(NAPPL)
 
+C       Solution change dates (YYYYDDD) — drain+refill events
+        INTEGER :: NSOLCHG = 0
+        INTEGER :: SOLCHG_DAY(NAPPL)
+
       END MODULE HydroFertData_mod

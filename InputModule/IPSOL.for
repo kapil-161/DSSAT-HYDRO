@@ -18,6 +18,7 @@ C-----------------------------------------------------------------------
      &                  AUTO_PH,AUTO_VOL,AUTO_CONC,AUTO_O2,
      &                  CHLEN)
 
+      USE HydroFertData_mod
       IMPLICIT NONE
       EXTERNAL ERROR, FIND, FIND2, IGNORE
 
@@ -28,6 +29,7 @@ C-----------------------------------------------------------------------
       CHARACTER*120 CHARTEST
 
       INTEGER LUNEXP,LNSOL,LNCTL,LN,LINEXP,ISECT,IFIND,ERRNUM
+      INTEGER IYEAR, IDOY, IDATE_5, IDATE_7
       REAL    SOLVOL,EC,PH,DO2,TEMP
       REAL    NO3_CONC,NH4_CONC,P_CONC,K_CONC
       REAL    CHLEN
@@ -164,6 +166,44 @@ C         Section not found - use defaults
         ENDIF
       ENDIF
 
+C-----------------------------------------------------------------------
+C     Read *SOLUTION CHANGES section (optional)
+C     Format: @L SDATE
+C              5 23021
+C     Each line = a date on which solution is drained and refilled fresh.
+C     Only used when AUTO_CONC='I'. If section absent, NSOLCHG=0.
+C-----------------------------------------------------------------------
+      NSOLCHG = 0
+      IF (ISWHYDRO .EQ. 'Y' .AND. AUTO_CONC .EQ. 'I') THEN
+        REWIND(LUNEXP)
+        LINEXP = 0
+        CALL FIND2(LUNEXP,'*SOLUTION CHANGES',LINEXP,IFIND)
+        IF (IFIND .GT. 0) THEN
+ 80       CALL IGNORE(LUNEXP,LINEXP,ISECT,CHARTEST)
+          IF (ISECT .EQ. 0) GO TO 81
+          IF (ISECT .EQ. 1) THEN
+            READ(CHARTEST,*,IOSTAT=ERRNUM) LN, IDATE_5
+            IF (ERRNUM .EQ. 0 .AND. LN .EQ. LNCTL) THEN
+              NSOLCHG = NSOLCHG + 1
+C             Convert YYDDD (5-digit) to YYYYDDD (7-digit)
+C             IDATE_5 = YYDDD, e.g. 23021 => YY=23, DOY=021
+              IDOY  = MOD(IDATE_5, 1000)
+              IYEAR = IDATE_5 / 1000
+              IF (IYEAR .LE. 99) THEN
+                IF (IYEAR .GE. 0 .AND. IYEAR .LE. 50) THEN
+                  IYEAR = 2000 + IYEAR
+                ELSE
+                  IYEAR = 1900 + IYEAR
+                ENDIF
+              ENDIF
+              SOLCHG_DAY(NSOLCHG) = IYEAR * 1000 + IDOY
+            ENDIF
+            IF (NSOLCHG .LT. NAPPL) GO TO 80
+          ENDIF
+ 81       WRITE(*,120) NSOLCHG
+        ENDIF
+      ENDIF
+
       REWIND (LUNEXP)
 
       RETURN
@@ -186,6 +226,7 @@ C-----------------------------------------------------------------------
      &        /,'   K                : ',F10.2,' mg/L',
      &        /,'   Channel Length   : ',F10.1,' cm',/)
 
+ 120  FORMAT (' SOLUTION CHANGES: ',I3,' date(s) scheduled')
  110  FORMAT (' HYDROPONIC CONTROL SETTINGS:',
      &        /,'   AUTO_PH  : ',A1,' (Y=constant, N=drift)',
      &        /,'   AUTO_VOL : ',A1,' (Y=constant, N=drift)',

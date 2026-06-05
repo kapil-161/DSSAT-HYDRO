@@ -749,6 +749,10 @@ C-----------------------------------------------------------------------
             SWFAC = TRWUP / EP1
           ENDIF
         ENDIF
+      ELSE
+!       WATER=N: potential production, no water stress
+        SWFAC  = 1.0
+        TURFAC = 1.0
       ENDIF
 
 !-----------------------------------------------------------------------
@@ -1047,8 +1051,10 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C    If ISWNIT = Y - Call soil N routines. Balance Available C and N
 C    If ISWNIT = N - Do not call soil N routines, N assumed to be limited by C
+C    In hydroponic mode NUPTAK must run regardless of ISWNIT to allow
+C    HYDRO_NUTRIENT to compute solution uptake (separate from soil N)
 C-----------------------------------------------------------------------
-      IF (ISWNIT .EQ. 'Y') THEN
+      IF (ISWNIT .EQ. 'Y' .OR. ISWHYDRO .EQ. 'Y') THEN
         CALL NUPTAK(INTEGR, ISWITCH,
      &    DLAYR, DUL, FILECC, KG2PPM, LL, NDMSDR, NDMTOT, !Input
      &    NH4, NO3, NLAYR, RLV, SAT, SW, PLTPOP, RTDEP,   !Input

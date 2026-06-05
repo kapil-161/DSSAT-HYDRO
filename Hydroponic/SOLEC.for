@@ -22,6 +22,7 @@ C-----------------------------------------------------------------------
 
       USE ModuleDefs
       USE ModuleData
+      USE HydroFertData_mod
       IMPLICIT NONE
       SAVE
 
@@ -116,7 +117,8 @@ C     File reading for SPE parameters
       PARAMETER (BLANK_LOC = ' ')
       EXTERNAL GETLUN, ERROR, FIND, IGNORE
 
-      INTEGER DYNAMIC
+      INTEGER DYNAMIC, YRDOY, I_SC
+      LOGICAL DO_RESET
       SAVE EC_INIT, NO3_INIT, NH4_INIT, P_INIT, K_INIT, SOLVOL_INIT
       SAVE C_NA0_5, K_INHIB_NO3, K_INHIB_K, K_INHIB_P
       SAVE EC_OPT_LOW, EC_OPT_HIGH, AUTO_CONC_R, AUTO_CONC_MODE
@@ -128,6 +130,7 @@ C     File reading for SPE parameters
 C-----------------------------------------------------------------------
 
       DYNAMIC = CONTROL % DYNAMIC
+      YRDOY   = CONTROL % YRDOY
 
       SELECT CASE (DYNAMIC)
 
@@ -526,20 +529,40 @@ C-----------------------------------------------------------------------
         ENDIF
 
         IF (AUTO_CONC_MODE .NE. 'N') THEN
-C         Also trigger if NO3 drops below 5% of initial (handles cases where
-C         P/K maintain EC above threshold even though N is depleted)
-          IF ((AUTO_CONC_MODE .EQ. 'O' .AND. EC_CALC .LT. EC_OPT_LOW)
-     &   .OR. (AUTO_CONC_MODE .EQ. 'I' .AND.
-     &         (EC_CALC .LT. EC_CALC_INIT * 0.99 .OR.
-     &          (NO3_INIT .GT. 1.0 .AND.
-     &           NO3_CONC .LT. NO3_INIT * 0.05)))) THEN
-C           Scale initial concentrations proportionally to reach feed target.
-            TotalIons = (NO3_INIT+NH4_INIT+P_INIT+K_INIT) * 2.5
-            EC_RATIO = TotalIons / EC_FACTOR
-            IF (EC_RATIO .GT. 0.1) THEN
-              FEED_SCALE = EC_FEED_TARGET / EC_RATIO
-            ELSE
+          DO_RESET = .FALSE.
+
+          IF (AUTO_CONC_MODE .EQ. 'I' .AND. NSOLCHG .GT. 0) THEN
+C           Scheduled solution changes: reset only on specified dates
+            DO I_SC = 1, NSOLCHG
+              IF (YRDOY .EQ. SOLCHG_DAY(I_SC)) THEN
+                DO_RESET = .TRUE.
+                EXIT
+              ENDIF
+            ENDDO
+          ELSE
+C           Auto mode: trigger when EC drops below threshold
+            IF ((AUTO_CONC_MODE .EQ. 'O' .AND. EC_CALC .LT. EC_OPT_LOW)
+     &     .OR. (AUTO_CONC_MODE .EQ. 'I' .AND.
+     &           (EC_CALC .LT. EC_CALC_INIT * 0.99 .OR.
+     &            (NO3_INIT .GT. 1.0 .AND.
+     &             NO3_CONC .LT. NO3_INIT * 0.05)))) THEN
+              DO_RESET = .TRUE.
+            ENDIF
+          ENDIF
+
+          IF (DO_RESET) THEN
+C           For scheduled changes: reset exactly to initial concentrations (scale=1.0)
+C           For auto mode: scale proportionally to reach EC_FEED_TARGET
+            IF (AUTO_CONC_MODE .EQ. 'I' .AND. NSOLCHG .GT. 0) THEN
               FEED_SCALE = 1.0
+            ELSE
+              TotalIons = (NO3_INIT+NH4_INIT+P_INIT+K_INIT) * 2.5
+              EC_RATIO = TotalIons / EC_FACTOR
+              IF (EC_RATIO .GT. 0.1) THEN
+                FEED_SCALE = EC_FEED_TARGET / EC_RATIO
+              ELSE
+                FEED_SCALE = 1.0
+              ENDIF
             ENDIF
             NO3_CONC = NO3_INIT * FEED_SCALE
             NH4_CONC = NH4_INIT * FEED_SCALE

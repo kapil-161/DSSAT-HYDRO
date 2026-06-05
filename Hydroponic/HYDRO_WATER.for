@@ -99,7 +99,7 @@ C       Get AUTO_VOL flag (1.0 = Y = constant volume, 0.0 = N = drift)
         IF (AUTO_VOL_R .LT. 0.0) AUTO_VOL_R = 0.0  ! Default to drift
 
 C       RWUMX from lettuce species file (cm3 water / cm root / d)
-        RWUMX_HYDRO = 0.04
+        RWUMX_HYDRO = 0.053
 
         IF (IDETL .EQ. 'D') THEN
           WRITE(*,100) SOLVOL_MM, AUTO_VOL_R

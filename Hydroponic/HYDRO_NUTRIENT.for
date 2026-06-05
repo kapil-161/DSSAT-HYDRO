@@ -247,15 +247,17 @@ C       Update stored uptake with today's kinetic-limited values
         CALL PUT('HYDRO','UNH4',UNH4)
         CALL PUT('HYDRO','NTOXS',NTOXS)
 
-        IF (SOLVOL .GT. 0.0) THEN
-          VOL_PER_HA = MAX(10.0, SOLVOL * 10000.0)
-          DEPL_NO3 = (UNO3 * 1.0E6) / VOL_PER_HA
-          DEPL_NH4 = (UNH4 * 1.0E6) / VOL_PER_HA
-          NO3_SOL = MAX(0.0, NO3_SOL - DEPL_NO3)
-          NH4_SOL = MAX(0.0, NH4_SOL - DEPL_NH4)
+        IF (ISWITCH % ISWNIT .NE. 'N') THEN
+          IF (SOLVOL .GT. 0.0) THEN
+            VOL_PER_HA = MAX(10.0, SOLVOL * 10000.0)
+            DEPL_NO3 = (UNO3 * 1.0E6) / VOL_PER_HA
+            DEPL_NH4 = (UNH4 * 1.0E6) / VOL_PER_HA
+            NO3_SOL = MAX(0.0, NO3_SOL - DEPL_NO3)
+            NH4_SOL = MAX(0.0, NH4_SOL - DEPL_NH4)
+          ENDIF
+          CALL PUT('HYDRO','NO3_CONC',NO3_SOL)
+          CALL PUT('HYDRO','NH4_CONC',NH4_SOL)
         ENDIF
-        CALL PUT('HYDRO','NO3_CONC',NO3_SOL)
-        CALL PUT('HYDRO','NH4_CONC',NH4_SOL)
 
       CASE (OUTPUT)
         CONTINUE
