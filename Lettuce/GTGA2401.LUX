@@ -37,7 +37,7 @@
 
 *PLANTING DETAILS
 @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
- 1 23014   -99    16    16     T     R    25     0     5  2.35    14  21.5   -99     3                        Bibb transplant nominal Jan14-2023
+ 1 23014   -99    16    16     T     R    25     0     5  1.00    14  21.5   -99     3                        Bibb transplant nominal Jan14-2023
 
 *IRRIGATION AND WATER MANAGEMENT
 @I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
@@ -65,16 +65,27 @@
 
 *HYDROPONIC SOLUTION
 @L  SVOL    EC    PH   DO2  TEMP  NO3C  NH4C    PC    KC  CHLN
- 1  50.0  1.30  6.00   8.0  21.5  10.6   0.0 154.1 210.0 152.0
- 2  50.0  1.30  6.00   8.0  21.5  25.3   0.0  93.9 210.0 152.0
- 3  50.0  1.40  6.00   8.0  21.5  33.1   0.0 109.9 210.0 152.0
- 4  50.0  1.40  6.00   8.0  21.5  64.9   1.2  31.0 210.0 152.0
- 5  50.0  1.50  6.00   8.0  21.5 125.6   6.6  31.0 210.0 152.0
- 6  50.0  2.20  6.00   8.0  21.5 191.7  72.8  31.0 218.4 152.0
+ 1   9.5  1.30  6.00   8.0  21.5  10.6   0.0 154.1 210.0 152.0
+ 2   9.5  1.30  6.00   8.0  21.5  25.3   0.0  93.9 210.0 152.0
+ 3   9.5  1.40  6.00   8.0  21.5  33.1   0.0 109.9 210.0 152.0
+ 4   9.5  1.40  6.00   8.0  21.5  64.9   1.2  31.0 210.0 152.0
+ 5   9.5  1.50  6.00   8.0  21.5 125.6   6.6  31.0 210.0 152.0
+ 6   9.5  2.20  6.00   8.0  21.5 191.7  72.8  31.0 218.4 152.0
 
 *HYDROPONIC CONTROL
 @L  AUPH  AUVL  AUCN  AUO2
- 1     Y     Y     N     Y
+ 1     Y     Y     I     Y
+
+*SOLUTION CHANGES
+@L  SDATE
+ 1  23019
+ 1  23021
+ 1  23028
+ 1  23035
+ 1  23037
+ 1  23039
+ 1  23042
+ 1  23044
 
 *SIMULATION CONTROLS
 @N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
