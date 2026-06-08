@@ -880,6 +880,8 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
         CALL SPREADR (SPDIRFLE,'PDMH' ,pdmtohar)
         CALL SPREADR (SPDIRFLE,'PHSV' ,phsv)
         CALL SPREADR (SPDIRFLE,'PHTV' ,phtv)
+        CALL PUT('SPAM', 'PHSV', phsv)
+        CALL PUT('SPAM', 'PHTV', phtv)
         CALL SPREADR (SPDIRFLE,'PPTHR',ppthr)
         CALL SPREADR (SPDIRFLE,'PTFXS',ptfxs)
         CALL SPREADR (SPDIRFLE,'PTFA' ,ptfa)

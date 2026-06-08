@@ -3,9 +3,33 @@ $BATCH(LETTUCE)
 ! Directory    : C:\DSSAT48\Lettuce
 ! Command Line : C:\DSSAT48\DSCSM048.EXE CRGRO048 B DSSBatch.v48
 ! Crop         : Lettuce
-! Experiment   : WAGA9101.LUX
-! ExpNo        : 1
-! Debug        : C:\DSSAT48\DSCSM048.EXE CRGRO048 " B DSSBatch.v48"
+! Experiments  : GTGA2401, UFGA2201, UFGA2402, WAGA9101
 !
 @FILEX                                                                                        TRTNO     RP     SQ     OP     CO
+C:\DSSAT48\Lettuce\GTGA2401.LUX                                                                   1      1      0      0      0
+C:\DSSAT48\Lettuce\GTGA2401.LUX                                                                   2      1      0      0      0
+C:\DSSAT48\Lettuce\GTGA2401.LUX                                                                   3      1      0      0      0
+C:\DSSAT48\Lettuce\GTGA2401.LUX                                                                   4      1      0      0      0
+C:\DSSAT48\Lettuce\GTGA2401.LUX                                                                   5      1      0      0      0
+C:\DSSAT48\Lettuce\GTGA2401.LUX                                                                   6      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   1      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   2      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   3      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   4      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   5      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   6      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   7      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   8      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   9      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                  10      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                  11      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                  12      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2402.LUX                                                                   1      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2402.LUX                                                                   2      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2402.LUX                                                                   3      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2402.LUX                                                                   4      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2402.LUX                                                                   5      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2402.LUX                                                                   6      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2402.LUX                                                                   7      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2402.LUX                                                                   8      1      0      0      0
 C:\DSSAT48\Lettuce\WAGA9101.LUX                                                                   1      1      0      0      0

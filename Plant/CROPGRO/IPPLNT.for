@@ -67,6 +67,7 @@ C-----------------------------------------------------------------------
 !     Species-dependant variables exported to SPAM or WATBAL:
       REAL EORATIO, KCAN, KEP, PORMIN, RWUMX, RWUEP1
       REAL KC_SLOPE !KCAN_ECO
+      REAL PHTV, PHSV
 
 !     The variable "CONTROL" is of constructed type "ControlType" as 
 !     defined in ModuleDefs.for, and contains the following variables.
@@ -327,6 +328,21 @@ C-----------------------------------------------------------------------
           CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
           READ(CHAR,'(2F6.0)',IOSTAT=ERR) KEP, EORATIO
           IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+!         Skip SSKC and TSKC lines, then read PHTV and PHSV for EVAPO=H
+          PHTV = 5.0
+          PHSV = 0.35
+          CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)  ! SSKC line
+          CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)  ! TSKC line
+          CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)  ! PHTV/PHSV line
+          IF (ISECT .EQ. 1) THEN
+            READ(CHAR,'(2F6.0)',IOSTAT=ERR) PHTV, PHSV
+            IF (ERR .NE. 0 .OR. PHSV .LE. 0.0) THEN
+              PHTV = 5.0
+              PHSV = 0.35
+            ENDIF
+          ENDIF
+          CALL PUT('SPAM', 'PHTV', PHTV)
+          CALL PUT('SPAM', 'PHSV', PHSV)
         ENDIF
 
 C-----------------------------------------------------------------------
