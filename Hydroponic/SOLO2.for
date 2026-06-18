@@ -100,11 +100,8 @@ C       Save initial DO2 for AUTO_O2 pinning
         O2_CONSUME = 0.0  ! Initialize O2 consumption
         O2_AERATION = 0.0  ! Initialize O2 aeration
 
-C       Aeration rate - depends on system type
-C       NFT/DFT: high (0.8-0.9)
-C       Static: low (0.2-0.4)
-C       Aeroponics: very high (0.95)
-        AERATION_RATE = 0.8  ! Assume NFT-type system
+C       Aeration rate: NFT/DFT=0.8-0.9, Static=0.2-0.4, Aeroponics=0.95
+        AERATION_RATE = 0.8
 
 C       Calculate saturation DO2 using Benson-Krause (1984) equation
 C       Convert temperature to Kelvin

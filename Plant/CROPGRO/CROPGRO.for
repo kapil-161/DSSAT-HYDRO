@@ -254,6 +254,7 @@ C=======================================================================
       KSEVAP = -99.   !Defaults to old method of light
                       !  extinction calculation for soil evap.
 
+
       IF (CROP .NE. 'FA' .AND. MEPHO .EQ. 'C') THEN
         CALL PHOTO(CONTROL, 
      &    BETN, CO2, DXR57, EXCESS, KCAN, KC_SLOPE,       !Input

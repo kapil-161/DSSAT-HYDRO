@@ -17,7 +17,7 @@ C-----------------------------------------------------------------------
 
       SUBROUTINE HYDRO_WATER(
      &    CONTROL, ISWITCH,                    !Input
-     &    EP,                                  !Input - plant transpiration (mm/d)
+     &    EP, RWUMX,                           !Input - transpiration, max root uptake
      &    TRWUP, TRWU, ES)                    !Output
 
       USE ModuleDefs
@@ -45,7 +45,6 @@ C     Local variables - all in mm
       REAL PLANT_UPTAKE_MM ! Plant water uptake (mm/d) - actual
       REAL PLANT_DEMAND_MM ! Plant water demand (mm/d) - from EP
       REAL SOL_EVAP_MM    ! Solution evaporation (mm/d) - minimal
-      REAL GROWING_AREA   ! Growing area (m2) - for conversion
       REAL WUF            ! Water uptake factor (demand/supply ratio, 0-1)
       REAL TRWUP_MM       ! Potential uptake in mm/d
       REAL TRWU_MM        ! Actual uptake in mm/d
@@ -53,8 +52,8 @@ C     Concentration correction variables
       REAL CONC_FACTOR    ! Concentration factor from volume reduction (>= 1.0)
       REAL NO3_CONC, NH4_CONC, P_CONC, K_CONC  ! mg/L
 C     Root-dependent water uptake variables
+      REAL RWUMX          ! Max water uptake per root length (cm3/cm root/d) - input
       REAL TRLV           ! Total root length volume (cm root/cm2 ground)
-      REAL RWUMX_HYDRO    ! Max water uptake per root length (cm3/cm root/d)
       REAL ROOT_SUPPLY_MM ! Root-limited water supply (mm/d)
       INTEGER DYNAMIC
       CHARACTER*1 IDETL   ! Detail level for output
@@ -91,22 +90,16 @@ C       Get initial solution depth in mm from ModuleData
 C       Store initial volume for AUTO_VOL refill target
         CALL PUT('HYDRO','SOLVOL_INIT',SOLVOL_INIT_MM)
 
-C       Get growing area from experimental file (*FIELDS section)
-        CALL GET('HYDRO','AREA',GROWING_AREA)
-
 C       Get AUTO_VOL flag (1.0 = Y = constant volume, 0.0 = N = drift)
         CALL GET('HYDRO','AUTO_VOL',AUTO_VOL_R)
         IF (AUTO_VOL_R .LT. 0.0) AUTO_VOL_R = 0.0  ! Default to drift
 
-C       RWUMX from lettuce species file (cm3 water / cm root / d)
-        RWUMX_HYDRO = 0.053
-
         IF (IDETL .EQ. 'D') THEN
-          WRITE(*,100) SOLVOL_MM, AUTO_VOL_R
+          WRITE(*,100) SOLVOL_MM, AUTO_VOL_R, RWUMX
  100      FORMAT(/,' Hydroponic water module initialized',
      &           /,' Initial solution depth: ',F8.1,' mm',
      &           /,' AUTO_VOL: ',F3.1,' (1.0=constant, 0.0=drift)',
-     &           /,' Water supply: UNLIMITED from nutrient solution',/)
+     &           /,' RWUMX (from SPE): ',F6.4,' cm3/cm root/d',/)
         ENDIF
 
       CASE (RATE)
@@ -124,18 +117,15 @@ C       Get detail level for output
 C       Get current solution depth in mm
         CALL GET('HYDRO','SOLVOL',SOLVOL_MM)
 
-C       Get growing area from experimental file (*FIELDS section)
-        CALL GET('HYDRO','AREA',GROWING_AREA)
-
 C       Root-limited potential supply (analogous to ROOTWU in soil mode)
-C       RWUMX_HYDRO (cm3/cm root/d) * TRLV (cm root/cm2) * 10 = mm/d
+C       RWUMX (cm3/cm root/d) * TRLV (cm root/cm2) * 10 = mm/d
 C       In RATE phase EP=0 is passed; TRWUP is the potential supply for stress calc
 C       TRLV = 0 before roots initialize: use a large number (unlimited)
         CALL GET('HYDRO','TRLV',TRLV)
         IF (TRLV .LE. 0.0) THEN
           ROOT_SUPPLY_MM = 1000.0  ! Unlimited — no root data yet
         ELSE
-          ROOT_SUPPLY_MM = RWUMX_HYDRO * TRLV * 10.0  ! mm/d
+          ROOT_SUPPLY_MM = RWUMX * TRLV * 10.0  ! mm/d
         ENDIF
         TRWUP_MM = ROOT_SUPPLY_MM  ! Potential supply (not capped by EP here)
         TRWUP    = TRWUP_MM * 0.1  ! cm/d
@@ -158,9 +148,6 @@ C       Get current solution depth in mm
 C       Get initial solution depth for AUTO_VOL refill target
         CALL GET('HYDRO','SOLVOL_INIT',SOLVOL_INIT_MM)
 
-C       Get growing area from experimental file (*FIELDS section)
-        CALL GET('HYDRO','AREA',GROWING_AREA)
-
 C       DEMAND-BASED: Plant water demand from transpiration (EP)
 C       EP is already in mm/d (rate per unit area)
         PLANT_DEMAND_MM = EP  ! mm/d
@@ -176,7 +163,7 @@ C       TRLV = 0 before roots initialize (day 1): unlimited supply
           ROOT_SUPPLY_MM = PLANT_DEMAND_MM  ! No root data — unlimited
           TRWUP_MM = PLANT_DEMAND_MM
         ELSE
-          ROOT_SUPPLY_MM = RWUMX_HYDRO * TRLV * 10.0  ! mm/d
+          ROOT_SUPPLY_MM = RWUMX * TRLV * 10.0  ! mm/d
           TRWUP_MM = MIN(PLANT_DEMAND_MM, ROOT_SUPPLY_MM)
         ENDIF
         TRWU_MM = TRWUP_MM

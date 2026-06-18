@@ -6,7 +6,7 @@ date: "April 2026"
 
 # Abstract
 
-Water uptake in hydroponic systems is fundamentally different from soil-based systems: the nutrient solution provides an essentially unlimited water supply to roots at all times, eliminating classical soil water stress as a limiting factor in crop growth. For lettuce (*Lactuca sativa* L.) grown in recirculating hydroponic systems, actual water uptake equals the potential transpiration demand, and the primary management challenge shifts from water availability to solution volume and nutrient concentration dynamics. This report describes the mechanisms of water uptake in hydroponic systems, with emphasis on the transpiration-driven mass flow of water and nutrients, solution volume tracking using the unit equivalence of millimeters depth and liters per square meter, the distinction between constant-volume (AUTO_VOL) and free-drift management modes, and the concentration effect arising from water loss without nutrient replenishment. The HYDRO_WATER module in the DSSAT hydroponic model implements these principles in a prognostic daily framework that tracks solution depth as a state variable, updates it for plant uptake and evaporation losses, and maintains nutrient concentrations in mass balance. Transpiration is sourced directly from the SPAM module (potential evapotranspiration partitioning), and water supply is set unconditionally equal to demand — reflecting the hydroponic system design assumption that solution volume is always adequate.
+Water uptake in hydroponic systems is fundamentally different from soil-based systems: the nutrient solution provides an essentially unlimited water supply to roots at all times, eliminating classical soil water stress as a limiting factor in crop growth. For lettuce (*Lactuca sativa* L.) grown in recirculating hydroponic systems, actual water uptake is limited only by root length density rather than soil hydraulic supply, and under adequate root development closely tracks the potential transpiration demand. The primary management challenge shifts from water availability to solution volume and nutrient concentration dynamics. This report describes the mechanisms of water uptake in hydroponic systems, with emphasis on root-limited supply computed from a maximum uptake rate per unit root length (RWUMX = 0.053 cm³ cm⁻¹ root day⁻¹, hardcoded), solution volume tracking using the unit equivalence of millimeters depth and liters per square meter, the distinction between constant-volume (AUTO_VOL) and free-drift management modes, and the concentration effect arising from water loss without nutrient replenishment. The HYDRO_WATER module in the DSSAT hydroponic model implements these principles in a prognostic daily framework that tracks solution depth as a state variable, updates it for plant uptake and evaporation losses, and maintains nutrient concentrations in mass balance. Transpiration demand (EP) is sourced directly from the SPAM module; actual uptake is the minimum of EP and root-limited supply.
 
 **Keywords:** water uptake, hydroponics, lettuce, transpiration, solution volume, nutrient concentration, mass balance, DSSAT, crop simulation, AUTO_VOL
 
@@ -16,7 +16,7 @@ Water uptake in hydroponic systems is fundamentally different from soil-based sy
 
 Water management in hydroponic systems differs fundamentally from field or greenhouse soil production. In soil, water availability is a primary growth-limiting factor mediated by soil hydraulic properties, root architecture, and atmospheric demand. Crop simulation models for soil systems therefore maintain elaborate water balance modules tracking infiltration, redistribution, evaporation, and root extraction from multiple soil layers (Jones et al., 1998). In hydroponic systems, roots are maintained in continuous contact with a free-flowing nutrient solution, and the rate-limiting step for water uptake is the plant's transpiration demand rather than the supply from the medium (Silberbush et al., 2005).
 
-This architectural difference has profound implications for modeling. In a hydroponic model, the water balance simplifies to: (1) plant uptake equals transpiration demand at all times; (2) the solution volume decreases as water is removed by transpiration and minor evaporative losses; and (3) dissolved nutrients concentrate as solution volume decreases, modifying the chemical environment for root uptake (Sonneveld & Voogt, 2009). Management practices — whether to replenish the solution continuously (constant-volume, or AUTO_VOL mode) or allow concentration to develop until a scheduled solution change (free-drift mode) — determine how rapidly nutrient concentrations evolve over the growing cycle.
+This architectural difference has profound implications for modeling. In a hydroponic model, the water balance simplifies to: (1) plant uptake is limited by root length density and under normal conditions closely matches transpiration demand; (2) the solution volume decreases as water is removed by transpiration and minor evaporative losses; and (3) dissolved nutrients concentrate as solution volume decreases, modifying the chemical environment for root uptake (Sonneveld & Voogt, 2009). Management practices — whether to replenish the solution continuously (constant-volume, or AUTO_VOL mode) or allow concentration to develop until a scheduled solution change (free-drift mode) — determine how rapidly nutrient concentrations evolve over the growing cycle.
 
 The DSSAT hydroponic model (based on the CROPGRO-Lettuce framework) includes a dedicated water module (HYDRO_WATER) that tracks solution depth as a prognostic daily state variable, computing actual water uptake, solution evaporation, and optional volume refill, and maintaining concentration mass balance for dissolved N, P, and K. This report describes the theoretical basis, design decisions, and implementation of this module.
 
@@ -30,19 +30,27 @@ In hydroponic systems, plant water uptake is driven entirely by the atmospheric 
 
 $$EP = ETo \times \left(1 - e^{-k \cdot LAI}\right)$$
 
-where *k* is the light extinction coefficient (typically 0.65 for lettuce). In soil models, actual transpiration (TRWU) may be less than potential (TRWUP) when soil water supply is insufficient. In the hydroponic module, this constraint is removed: actual uptake equals potential demand because the solution always provides adequate water at the root surface.
+where *k* is the light extinction coefficient (typically 0.65 for lettuce). In soil models, actual transpiration (TRWU) may be less than potential (TRWUP) when soil water supply is insufficient. In the hydroponic module, the supply is root-limited rather than soil-limited: potential supply (TRWUP) is computed from the root length density and a maximum uptake rate per unit root length:
 
-$$TRWU = TRWUP = EP$$
+$$TRWUP_{mm} = RWUMX \times TRLV \times 10$$
 
-This assumption is supported by the design principle of recirculating hydroponic systems (NFT, deep water culture, ebb-and-flow), in which root exposure to the nutrient solution is continuous and the solution volume is maintained well above the daily transpiration demand (Resh, 2013). The only exception would be equipment failure or extreme solution depletion, handled by the minimum volume floor of 5.0 mm in the HYDRO_WATER module.
+where RWUMX = 0.053 cm³ water cm⁻¹ root day⁻¹ (hardcoded in HYDRO_WATER at SEASINIT) and TRLV is total root length volume (cm root cm⁻² ground). Actual uptake is then the minimum of demand and root-limited supply:
 
-## 2.2 Absence of Water Stress Factor
+$$TRWU = \min(EP,\ TRWUP_{mm})$$
+
+In practice, for well-established lettuce with adequate root length, TRWUP greatly exceeds EP and TRWU ≈ EP. Before roots initialize (TRLV = 0), an unlimited supply of 1000 mm day⁻¹ is assumed. This assumption is supported by the design principle of recirculating hydroponic systems (NFT, deep water culture, ebb-and-flow), in which root exposure to the nutrient solution is continuous and the solution volume is maintained well above the daily transpiration demand (Resh, 2013). The minimum volume floor of 5.0 mm in the HYDRO_WATER module provides a numerical safeguard against solution exhaustion.
+
+## 2.2 Water Uptake Factor (WUF)
 
 In soil-based DSSAT modules, a water uptake factor (WUF) scales actual uptake and associated growth processes:
 
 $$WUF = \frac{TRWU}{TRWUP}$$
 
-In HYDRO_WATER, WUF is set unconditionally to 1.0. Ionic stress from high electrical conductivity (EC) of the nutrient solution — which in soil systems would manifest partly as osmotic stress reducing water uptake — is handled separately in the SOLEC module through kinetic suppression of nutrient transporter activity (J_max and K_m modifications), not through reduction of the water uptake factor. This separation reflects the experimental observation that hydroponic lettuce maintains near-normal water uptake rates at EC values that substantially suppress nutrient uptake, because osmotic adjustment is a slower process than transporter inhibition (Munns & Tester, 2008).
+In HYDRO_WATER, WUF is computed as:
+
+$$WUF = \min\left(1.0,\ \frac{TRWU_{mm}}{EP}\right)$$
+
+Under normal conditions (adequate root length), TRWU ≈ EP and WUF ≈ 1.0. WUF can fall below 1.0 only if root length is insufficient to meet transpiration demand — analogous to soil mode where hydraulic conductivity limits supply. Ionic stress from high electrical conductivity (EC) of the nutrient solution — which in soil systems would manifest partly as osmotic stress reducing water uptake — is handled separately in the SOLEC module through kinetic suppression of nutrient transporter activity (J_max and K_m modifications), not through reduction of WUF. This separation reflects the experimental observation that hydroponic lettuce maintains near-normal water uptake rates at EC values that substantially suppress nutrient uptake, because osmotic adjustment is a slower process than transporter inhibition (Munns & Tester, 2008).
 
 ---
 
@@ -50,11 +58,7 @@ In HYDRO_WATER, WUF is set unconditionally to 1.0. Ionic stress from high electr
 
 ## 3.1 The mm = L/m² Equivalence
 
-The HYDRO_WATER module represents solution volume as a depth in millimeters (SOLVOL_MM). This follows the agronomic convention that 1 mm of water depth over 1 m² of growing area corresponds to 1 liter of solution:
-
-$$V_L = SOLVOL_{mm} \times A_{m^2}$$
-
-where *V*_L is the solution volume in liters and *A* is the growing area in m². For a 100 m² greenhouse bay holding solution at a depth of 100 mm, V_L = 10,000 L = 10 m³. The mm representation is computationally convenient because it parallels the representation of precipitation and evapotranspiration in standard DSSAT soil modules, enabling consistent unit handling throughout the model framework.
+The HYDRO_WATER module represents solution volume as a depth in millimeters (SOLVOL_MM). This follows the agronomic convention that 1 mm of water depth corresponds to 1 liter per square meter of growing area (1 mm = 1 L m⁻²). All fluxes (transpiration, evaporation, refill) are expressed in mm day⁻¹, consistent with the per-unit-area basis used throughout DSSAT. No explicit growing area conversion is needed or performed — the module operates entirely in mm, identical to how DSSAT handles precipitation and evapotranspiration in soil modules.
 
 ## 3.2 Solution Depth as a State Variable
 
@@ -62,15 +66,15 @@ The solution depth SOLVOL_MM is a prognostic state variable updated at each dail
 
 $$SOLVOL_{t+1} = SOLVOL_t + W_{add} - W_{plant} - W_{evap}$$
 
-where *W*_add is the water added by irrigation or refill (mm day⁻¹), *W*_plant is the plant uptake (= EP, mm day⁻¹), and *W*_evap is the solution surface evaporation (mm day⁻¹). A minimum floor of 5.0 mm (5 L m⁻²) is enforced to prevent numerical instability in nutrient concentration calculations.
+where *W*_add is the water added by irrigation or refill (mm day⁻¹), *W*_plant is the actual plant uptake = MIN(EP, ROOT_SUPPLY_MM) (mm day⁻¹), and *W*_evap is the solution surface evaporation (mm day⁻¹). A minimum floor of 5.0 mm (5 L m⁻²) is enforced to prevent numerical instability in nutrient concentration calculations.
 
 ---
 
 # 4. Solution Evaporation
 
-Solution surface evaporation from hydroponic systems is substantially smaller than canopy transpiration. In NFT and deep water culture channels, the solution surface is largely shaded by the plant canopy, and in covered substrate systems the solution is not exposed to the atmosphere at all. The HYDRO_WATER module estimates solution evaporation as 1% of the plant transpiration rate:
+Solution surface evaporation from hydroponic systems is substantially smaller than canopy transpiration. In NFT and deep water culture channels, the solution surface is largely shaded by the plant canopy, and in covered substrate systems the solution is not exposed to the atmosphere at all. The HYDRO_WATER module estimates solution evaporation as 1% of the actual plant uptake rate:
 
-$$W_{evap} = 0.01 \times EP$$
+$$W_{evap} = 0.01 \times TRWU_{mm}$$
 
 This approximation is appropriate for mature lettuce canopies (LAI > 2) where canopy shading of the solution surface is high (Bugbee, 2004). At the seedling stage, when LAI is low and solution exposure is greater, the actual evaporation fraction may be higher; however, the overall effect on the solution balance is small relative to transpiration and is not the primary focus of model sensitivity. The output variable ES (soil evaporation, used by DSSAT SPAM) is set to 0.0, as there is no soil in the hydroponic system.
 
@@ -139,7 +143,7 @@ where *C*_i is the concentration of ion *i* in the solution (converted to approp
 HYDRO_WATER is a Fortran-90 subroutine called from the SPAM module at each daily timestep. It operates through the standard DSSAT simulation phases:
 
 - **RUNINIT/SEASINIT**: Reads initial solution depth (SOLVOL) from the experiment file via ModuleData GET, saves SOLVOL_INIT for AUTO_VOL refill target, reads AUTO_VOL flag.
-- **RATE**: Computes potential water uptake (TRWUP = EP × 0.1, in cm day⁻¹) and stores TRWUP_MM for the INTEGR phase. EP is 0.0 at RATE call time in the DSSAT execution sequence; SPAM RATE overrides TRWU = EP before the INTEGR phase begins.
+- **RATE**: Computes root-limited potential water supply (`TRWUP_MM = RWUMX_HYDRO * TRLV * 10`, mm day⁻¹) and stores it via `PUT('HYDRO','TRWUP_MM',...)`. EP is not yet available at RATE call time (it is 0.0); TRWUP here reflects the physical root uptake capacity, not EP.
 - **INTEGR**: Executes the full water balance: computes actual uptake, applies volume update, enforces minimum floor, applies concentration factor to nutrient pools, stores updated SOLVOL.
 - **SEASEND**: Reports initial and final solution volumes.
 
@@ -152,17 +156,16 @@ All inter-module state variables are communicated through the DSSAT ModuleData s
 | SOLVOL | GET/PUT | mm | Solution depth (state variable) |
 | SOLVOL_INIT | PUT | mm | Initial depth (AUTO_VOL target) |
 | AUTO_VOL | GET | — | Volume mode flag (1.0=constant, 0.0=drift) |
-| AREA | GET | m² | Growing area |
 | EP | PUT | mm/d | Transpiration (for nutrient modules) |
-| TRWUP_MM | PUT | mm/d | Potential supply (diagnostic) |
+| TRWUP_MM | PUT | mm/d | Root-limited potential supply (= RWUMX × TRLV × 10) |
 | NO3_CONC, NH4_CONC, P_CONC, K_CONC | GET/PUT | mg/L | Nutrient concentrations updated for concentration effect |
 
 ## 8.3 Output Variables
 
 HYDRO_WATER returns three variables to the calling SPAM module:
-- **TRWUP** (cm day⁻¹): Potential water uptake — equals EP (unlimited supply)
-- **TRWU** (cm day⁻¹): Actual water uptake — equals TRWUP (no water stress)
-- **ES** (mm day⁻¹): Solution evaporation returned as 0.0 (no soil in hydroponic system; surface evaporation is handled internally)
+- **TRWUP** (cm day⁻¹): Root-limited potential water supply = `ROOT_SUPPLY_MM * 0.1`; greatly exceeds EP under normal conditions
+- **TRWU** (cm day⁻¹): Actual water uptake = `MIN(demand, root supply) * 0.1`; equals EP when roots are adequate
+- **ES** (mm day⁻¹): Returned as 0.0 (no soil evaporation in hydroponics; solution surface evaporation is accounted for internally as `SOL_EVAP_MM = PLANT_UPTAKE_MM * 0.01` and subtracted from SOLVOL, but not passed out)
 
 ---
 
@@ -178,7 +181,7 @@ The concentration effect calculation (Section 6) is a key mechanistic feature: w
 
 # 10. Conclusion
 
-Water uptake in hydroponic lettuce systems is transpiration-driven and supply-unlimited, reducing the water balance to a solution volume tracking problem. The HYDRO_WATER module implements this by setting actual water uptake equal to potential transpiration demand (TRWU = TRWUP = EP), tracking solution depth in mm (1 mm = 1 L m⁻²) as a prognostic state variable, and applying a daily concentration factor to maintain nutrient mass balance as transpiration reduces solution volume. Two management modes are supported: constant-volume refill (AUTO_VOL = Y) for standard agronomic simulations, and free-drift (AUTO_VOL = N) for research investigations. The absence of a water stress factor (WUF = 1.0) reflects the fundamental hydroponic design principle that root water supply is unlimited, with ion stress handled separately through the EC and pH stress modules.
+Water uptake in hydroponic lettuce systems is transpiration-driven with supply limited only by root length density, reducing the water balance to a solution volume tracking problem. The HYDRO_WATER module implements this by computing root-limited potential supply (TRWUP = RWUMX × TRLV × 10) and setting actual uptake to the minimum of transpiration demand and root supply (TRWU = MIN(EP, TRWUP)), tracking solution depth in mm (1 mm = 1 L m⁻²) as a prognostic state variable, and applying a daily concentration factor to maintain nutrient mass balance as transpiration reduces solution volume. WUF is computed as TRWU/EP and approaches 1.0 whenever root length is adequate. Two management modes are supported: constant-volume refill (AUTO_VOL = Y) for standard agronomic simulations, and free-drift (AUTO_VOL = N) for research investigations. Ion stress is handled separately through the EC and pH stress modules (SOLEC), not through reduction of WUF.
 
 ---
 

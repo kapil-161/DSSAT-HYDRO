@@ -226,7 +226,7 @@ C=======================================================================
           ES    = 0.0
 !         Initialize hydroponic water module
           CALL HYDRO_WATER(CONTROL, ISWITCH,
-     &      0.0,                                !Input - EP not needed in SEASINIT
+     &      0.0, RWUMX,                         !Input - EP not needed in SEASINIT
      &      TRWUP, TRWU, ES)                    !Output
         ELSE
 !         SOIL MODE: Initialize root water uptake and soil evaporation
@@ -420,7 +420,7 @@ C=======================================================================
             RWU   = 0.0       ! No layer uptake
 !           Call HYDRO_WATER in RATE phase to calculate TRWUP
             CALL HYDRO_WATER(CONTROL, ISWITCH,
-     &        0.0,                            !Input - EP not needed in RATE
+     &        0.0, RWUMX,                     !Input - EP not needed in RATE
      &        TRWUP, TRWU, ES)                !Output - TRWUP calculated here
           ENDIF
 
@@ -726,7 +726,7 @@ C         Override EP in hydroponic mode to ensure demand-based transpiration
 !       Update solution volume based on water balance
 !       (water additions, plant uptake, evaporation)
         CALL HYDRO_WATER(CONTROL, ISWITCH,
-     &    EP,                                      !Input - transpiration
+     &    EP, RWUMX,                               !Input - transpiration
      &    TRWUP, TRWU, ES)                         !Output
 
 !       Update solution properties after uptake

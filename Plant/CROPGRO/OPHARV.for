@@ -520,7 +520,7 @@ C-----------------------------------------------------------------------
                                   WRITE(Measured(10),'(A8)') TRIM(X(10))
       WRITE(Simulated(11), '(I8)') NINT(CANWAA*10);
                                   WRITE(Measured(11),'(A8)')TRIM(X(11))
-      WRITE(Simulated(12),'(I8)') NINT(TOPWT*10); 
+      WRITE(Simulated(12),'(I8)') NINT(TOPWT*10);
                                   WRITE(Measured(12),'(A8)')TRIM(X(12))
       WRITE(Simulated(13),'(I8)') NINT(TOPWT-SDWT)*10; 
                                   WRITE(Measured(13),'(A8)')TRIM(X(13))
