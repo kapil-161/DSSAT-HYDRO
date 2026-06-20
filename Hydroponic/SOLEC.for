@@ -47,6 +47,7 @@ C     Local variables
       REAL K_ppm         ! K in ppm
       REAL TotalIons     ! Total ion concentration (ppm)
       REAL NO3_INIT, NH4_INIT, P_INIT, K_INIT ! Initial nutrient concentrations
+      REAL CA_CONC, MG_CONC, S_CONC          ! Ca, Mg, S concentrations (mg/L)
       REAL EC_RATIO, EC_DEVIATION  ! For EC management
       
 C     Variables for EC/nutrient calculation
@@ -99,11 +100,34 @@ C     EC threshold absolutes and stress curve params — read from SPE
 C     Solution volume (for initialization only)
       REAL SOLVOL_INIT   ! Initial solution volume (mm)
 
-C     Conversion factors for EC estimation
-C     Approximate relationship: EC (dS/m) ~ TotalIons (ppm) / 640
-C     This is a rough empirical relationship for hydroponic solutions
-      REAL EC_FACTOR
-      PARAMETER (EC_FACTOR = 640.0)
+C     Molar conductivity constants for EC calculation (mS cm-1 per mmol L-1)
+C     Based on Kohlrausch law of independent ion migration (limiting molar conductivity):
+C       EC = sum(ci * lambda_i)  where ci = mmol/L, lambda_i = mS cm-1 per mmol L-1
+C     Ion lambda values at 25 degC from Griffin & Jurinak (1973) Soil Sci. 116:26-30
+C       doi:10.1097/00010694-197307000-00005
+C     Practical form EC (dS/m) ~ 0.1 * sum(mmol/L) from Sonneveld & Voogt (2009)
+C       Plant Nutrition of Greenhouse Crops, Springer. doi:10.1007/978-90-481-2532-6
+C     Molecular weights (g/mol): N=14.007, P=30.974, K=39.098
+      REAL, PARAMETER :: MW_N  = 14.007   ! g/mol (for NO3-N and NH4-N)
+      REAL, PARAMETER :: MW_P  = 30.974   ! g/mol (for P)
+      REAL, PARAMETER :: MW_K  = 39.098   ! g/mol (for K)
+C     Limiting molar conductivity (mS cm-1 per mmol L-1) at 25 degC
+C     NO3-: 0.0714, NH4+: 0.0734, H2PO4-: 0.0330, K+: 0.0735
+C     Source: Griffin & Jurinak (1973); Visconti et al. (2010) Eur J Soil Sci 61:980-993
+C       doi:10.1111/j.1365-2389.2010.01284.x
+      REAL, PARAMETER :: LAMBDA_NO3 = 0.0714
+      REAL, PARAMETER :: LAMBDA_NH4 = 0.0734
+      REAL, PARAMETER :: LAMBDA_P   = 0.0330
+      REAL, PARAMETER :: LAMBDA_K   = 0.0735
+C     Ca2+: 0.0595, Mg2+: 0.0530, SO42-: 0.0800
+C     Source: CRC Handbook of Chemistry and Physics (Haynes, 2014, 95th ed.)
+      REAL, PARAMETER :: MW_CA      = 40.078
+      REAL, PARAMETER :: MW_MG      = 24.305
+      REAL, PARAMETER :: MW_S       = 32.06    ! elemental S, stored as S in LUX
+      REAL, PARAMETER :: MW_SO4     = 96.06
+      REAL, PARAMETER :: LAMBDA_CA  = 0.0595
+      REAL, PARAMETER :: LAMBDA_MG  = 0.0530
+      REAL, PARAMETER :: LAMBDA_SO4 = 0.0800
 
 C     File reading for SPE parameters
       CHARACTER*30 FILEIO_LOC
@@ -120,6 +144,7 @@ C     File reading for SPE parameters
       INTEGER DYNAMIC, YRDOY, I_SC
       LOGICAL DO_RESET
       SAVE EC_INIT, NO3_INIT, NH4_INIT, P_INIT, K_INIT, SOLVOL_INIT
+      SAVE CA_CONC, MG_CONC, S_CONC
       SAVE C_NA0_5, K_INHIB_NO3, K_INHIB_K, K_INHIB_P
       SAVE EC_OPT_LOW, EC_OPT_HIGH, AUTO_CONC_R, AUTO_CONC_MODE
       REAL EC_CALC_INIT  ! Formula-derived EC at initialization (dS/m)
@@ -181,6 +206,14 @@ C-----------------------------------------------------------------------
         CALL GET('HYDRO','EC',EC_INIT)
         CALL GET('HYDRO','SOLVOL',SOLVOL_INIT)
 
+C       Get Ca, Mg, S concentrations (mg/L) — used for full Kohlrausch EC
+        CALL GET('HYDRO','CA_CONC',CA_CONC)
+        CALL GET('HYDRO','MG_CONC',MG_CONC)
+        CALL GET('HYDRO','S_CONC', S_CONC)
+        IF (CA_CONC .LT. 0.0) CA_CONC = 0.0
+        IF (MG_CONC .LT. 0.0) MG_CONC = 0.0
+        IF (S_CONC  .LT. 0.0) S_CONC  = 0.0
+
 C       Get ballast ion concentrations (Na, Cl) from ModuleData
 C       If not set in experiment file, will default to 0.0
         CALL GET('HYDRO','NA_CONC',NA_CONC)
@@ -218,13 +251,17 @@ C-----------------------------------------------------------------------
 C       CASE 1: EC provided, nutrients missing - Calculate nutrients from EC
 C-----------------------------------------------------------------------
         IF (EC_PROVIDED .AND. .NOT. NUTRIENTS_PROVIDED) THEN
-C         Calculate total ions from EC
-C         EC (dS/m) = TotalIons (ppm) / 640
-          TotalIons_FromEC = EC_INIT * EC_FACTOR
-          
-C         Calculate nutrient ions (excluding counter-ions)
-C         Factor 2.5 accounts for counter-ions, so nutrients = TotalIons / 2.5
-          TotalNutrients = TotalIons_FromEC / 2.5
+C         Invert Kohlrausch law to distribute EC across nutrients
+C         EC = sum(ci*lambda_i); assume standard hydroponic ratios to apportion
+C         Effective combined lambda for N+P+K mixture (weighted by ratios below):
+C           lambda_eff = 0.42*LAMBDA_NO3 + 0.02*LAMBDA_NH4
+C                      + 0.065*LAMBDA_P + 0.495*LAMBDA_K (per mmol/L basis)
+C         Then convert mmol/L back to mg/L via MW
+C         Refs: Griffin & Jurinak (1973) doi:10.1097/00010694-197307000-00005
+C               Sonneveld & Voogt (2009) doi:10.1007/978-90-481-2532-6
+          TotalNutrients = EC_INIT /
+     &      (0.42*LAMBDA_NO3/MW_N + 0.02*LAMBDA_NH4/MW_N
+     &     + 0.065*LAMBDA_P/MW_P + 0.495*LAMBDA_K/MW_K)
           
 C         Distribute nutrients using typical hydroponic ratios
 C         Based on standard hydroponic recipe: N 210 ppm, P 31 ppm, K 235 ppm
@@ -256,18 +293,25 @@ C-----------------------------------------------------------------------
         ELSE IF (.NOT. EC_PROVIDED .AND. NUTRIENTS_PROVIDED) THEN
 C         Calculate EC from nutrient concentrations
 C         Use 0.0 for any missing nutrients (-99)
-          TotalNutrients = 0.0
-          IF (NO3_CONC .GT. 0.0) TotalNutrients = TotalNutrients + NO3_CONC
-          IF (NH4_CONC .GT. 0.0) TotalNutrients = TotalNutrients + NH4_CONC
-          IF (P_CONC .GT. 0.0) TotalNutrients = TotalNutrients + P_CONC
-          IF (K_CONC .GT. 0.0) TotalNutrients = TotalNutrients + K_CONC
-          
-C         Sum total ions (nutrients + counter-ions)
-          TotalIons = TotalNutrients * 2.5
-          
-C         Calculate EC from total ions
-          EC_INIT = TotalIons / EC_FACTOR
-          
+C         Kohlrausch law: EC = sum(ci * lambda_i), ci in mmol/L
+C         Refs: Griffin & Jurinak (1973) doi:10.1097/00010694-197307000-00005
+C               Sonneveld & Voogt (2009) doi:10.1007/978-90-481-2532-6
+          EC_INIT = 0.0
+          IF (NO3_CONC .GT. 0.0)
+     &      EC_INIT = EC_INIT + (NO3_CONC / MW_N) * LAMBDA_NO3
+          IF (NH4_CONC .GT. 0.0)
+     &      EC_INIT = EC_INIT + (NH4_CONC / MW_N) * LAMBDA_NH4
+          IF (P_CONC .GT. 0.0)
+     &      EC_INIT = EC_INIT + (P_CONC   / MW_P) * LAMBDA_P
+          IF (K_CONC .GT. 0.0)
+     &      EC_INIT = EC_INIT + (K_CONC   / MW_K) * LAMBDA_K
+          IF (CA_CONC .GT. 0.0)
+     &      EC_INIT = EC_INIT + (CA_CONC  / MW_CA) * LAMBDA_CA
+          IF (MG_CONC .GT. 0.0)
+     &      EC_INIT = EC_INIT + (MG_CONC  / MW_MG) * LAMBDA_MG
+          IF (S_CONC  .GT. 0.0)
+     &      EC_INIT = EC_INIT + (S_CONC / MW_S) * LAMBDA_SO4
+
 C         Ensure minimum EC
           IF (EC_INIT .LT. 0.1) EC_INIT = 0.1
           
@@ -283,15 +327,25 @@ C-----------------------------------------------------------------------
         ELSE IF (EC_PROVIDED .AND. NUTRIENTS_PROVIDED) THEN
 C         Both provided - validate consistency
 C         Use 0.0 for any missing nutrients (-99)
-          TotalNutrients = 0.0
-          IF (NO3_CONC .GT. 0.0) TotalNutrients = TotalNutrients + NO3_CONC
-          IF (NH4_CONC .GT. 0.0) TotalNutrients = TotalNutrients + NH4_CONC
-          IF (P_CONC .GT. 0.0) TotalNutrients = TotalNutrients + P_CONC
-          IF (K_CONC .GT. 0.0) TotalNutrients = TotalNutrients + K_CONC
-          
-          TotalIons = TotalNutrients * 2.5
-          EC_CALC = TotalIons / EC_FACTOR
-          
+C         Kohlrausch law: EC = sum(ci * lambda_i), ci in mmol/L
+C         Refs: Griffin & Jurinak (1973) doi:10.1097/00010694-197307000-00005
+C               Sonneveld & Voogt (2009) doi:10.1007/978-90-481-2532-6
+          EC_CALC = 0.0
+          IF (NO3_CONC .GT. 0.0)
+     &      EC_CALC = EC_CALC + (NO3_CONC / MW_N) * LAMBDA_NO3
+          IF (NH4_CONC .GT. 0.0)
+     &      EC_CALC = EC_CALC + (NH4_CONC / MW_N) * LAMBDA_NH4
+          IF (P_CONC .GT. 0.0)
+     &      EC_CALC = EC_CALC + (P_CONC   / MW_P) * LAMBDA_P
+          IF (K_CONC .GT. 0.0)
+     &      EC_CALC = EC_CALC + (K_CONC   / MW_K) * LAMBDA_K
+          IF (CA_CONC .GT. 0.0)
+     &      EC_CALC = EC_CALC + (CA_CONC  / MW_CA) * LAMBDA_CA
+          IF (MG_CONC .GT. 0.0)
+     &      EC_CALC = EC_CALC + (MG_CONC  / MW_MG) * LAMBDA_MG
+          IF (S_CONC  .GT. 0.0)
+     &      EC_CALC = EC_CALC + (S_CONC   / MW_S)  * LAMBDA_SO4
+
           IF (ABS(EC_CALC - EC_INIT) .GT. 0.5) THEN
             WRITE(*,*) 'SOLEC WARNING: EC mismatch!'
             WRITE(*,*) '  Provided EC=',EC_INIT,' dS/m'
@@ -370,14 +424,21 @@ C-----------------------------------------------------------------------
         P_ppm   = P_CONC
         K_ppm   = K_CONC
 
-C       Sum total dissolved ions
-C       Note: This is simplified - actual EC also depends on Ca, Mg, S, etc.
-C       For complete solution, multiply by factor to account for unmeasured ions
-        TotalIons = (NO3_ppm + NH4_ppm + P_ppm + K_ppm) * 2.5
-C       Factor 2.5 accounts for counter-ions (Ca, Mg, SO4, etc.)
-
-C       Calculate EC from total ions
-        EC_CALC = TotalIons / EC_FACTOR
+C       EC calculated via Kohlrausch law of independent ion migration:
+C         EC = sum(ci * lambda_i), ci in mmol/L, lambda_i in mS cm-1 per mmol L-1
+C         EC (mS/cm) = EC (dS/m) at 25 degC
+C       Convert mg/L to mmol/L: divide by MW (g/mol)
+C       Only N, P, K tracked; Ca, Mg, SO4 not modelled as dynamic state variables
+C       Refs: Griffin & Jurinak (1973) doi:10.1097/00010694-197307000-00005
+C             Sonneveld & Voogt (2009) doi:10.1007/978-90-481-2532-6
+C             Visconti et al. (2010) doi:10.1111/j.1365-2389.2010.01284.x
+        EC_CALC = (NO3_ppm / MW_N) * LAMBDA_NO3
+     &          + (NH4_ppm / MW_N) * LAMBDA_NH4
+     &          + (P_ppm   / MW_P) * LAMBDA_P
+     &          + (K_ppm   / MW_K) * LAMBDA_K
+     &          + (CA_CONC / MW_CA) * LAMBDA_CA
+     &          + (MG_CONC / MW_MG) * LAMBDA_MG
+     &          + (S_CONC  / MW_S)  * LAMBDA_SO4
 
 C       Ensure minimum EC
         IF (EC_CALC .LT. 0.1) EC_CALC = 0.1
@@ -511,9 +572,18 @@ C       (HYDRO_NUTRIENT INTEGR has already run and depleted concentrations)
         CALL GET('HYDRO','P_CONC',P_CONC)
         CALL GET('HYDRO','K_CONC',K_CONC)
 
-C       Recalculate EC from post-depletion concentrations
-        TotalIons = (NO3_CONC + NH4_CONC + P_CONC + K_CONC) * 2.5
-        EC_CALC = TotalIons / EC_FACTOR
+C       Recalculate EC from post-depletion concentrations via Kohlrausch law
+C         EC = sum(ci * lambda_i), ci in mmol/L, lambda_i in mS cm-1 per mmol L-1
+C       Refs: Griffin & Jurinak (1973) doi:10.1097/00010694-197307000-00005
+C             Sonneveld & Voogt (2009) doi:10.1007/978-90-481-2532-6
+C             Visconti et al. (2010) doi:10.1111/j.1365-2389.2010.01284.x
+        EC_CALC = (NO3_CONC / MW_N) * LAMBDA_NO3
+     &          + (NH4_CONC / MW_N) * LAMBDA_NH4
+     &          + (P_CONC   / MW_P) * LAMBDA_P
+     &          + (K_CONC   / MW_K) * LAMBDA_K
+     &          + (CA_CONC  / MW_CA) * LAMBDA_CA
+     &          + (MG_CONC  / MW_MG) * LAMBDA_MG
+     &          + (S_CONC   / MW_S)  * LAMBDA_SO4
         IF (EC_CALC .LT. 0.1) EC_CALC = 0.1
 
 C-----------------------------------------------------------------------
@@ -556,8 +626,15 @@ C           For auto mode: scale proportionally to reach EC_FEED_TARGET
             IF (AUTO_CONC_MODE .EQ. 'I' .AND. NSOLCHG .GT. 0) THEN
               FEED_SCALE = 1.0
             ELSE
-              TotalIons = (NO3_INIT+NH4_INIT+P_INIT+K_INIT) * 2.5
-              EC_RATIO = TotalIons / EC_FACTOR
+C             Kohlrausch law EC from initial concentrations
+C             Ref: Griffin & Jurinak (1973) doi:10.1097/00010694-197307000-00005
+              EC_RATIO = (NO3_INIT/MW_N)*LAMBDA_NO3
+     &                 + (NH4_INIT/MW_N)*LAMBDA_NH4
+     &                 + (P_INIT  /MW_P)*LAMBDA_P
+     &                 + (K_INIT  /MW_K)*LAMBDA_K
+     &                 + (CA_CONC /MW_CA)*LAMBDA_CA
+     &                 + (MG_CONC /MW_MG)*LAMBDA_MG
+     &                 + (S_CONC  /MW_S) *LAMBDA_SO4
               IF (EC_RATIO .GT. 0.1) THEN
                 FEED_SCALE = EC_FEED_TARGET / EC_RATIO
               ELSE
@@ -573,9 +650,15 @@ C           For auto mode: scale proportionally to reach EC_FEED_TARGET
             CALL PUT('HYDRO','P_CONC',P_CONC)
             CALL PUT('HYDRO','K_CONC',K_CONC)
 
-C           Recalculate EC after replenishment
-            TotalIons = (NO3_CONC + NH4_CONC + P_CONC + K_CONC) * 2.5
-            EC_CALC = TotalIons / EC_FACTOR
+C           Recalculate EC after replenishment via Kohlrausch law
+C           Ref: Griffin & Jurinak (1973) doi:10.1097/00010694-197307000-00005
+            EC_CALC = (NO3_CONC/MW_N)*LAMBDA_NO3
+     &              + (NH4_CONC/MW_N)*LAMBDA_NH4
+     &              + (P_CONC  /MW_P)*LAMBDA_P
+     &              + (K_CONC  /MW_K)*LAMBDA_K
+     &              + (CA_CONC /MW_CA)*LAMBDA_CA
+     &              + (MG_CONC /MW_MG)*LAMBDA_MG
+     &              + (S_CONC  /MW_S) *LAMBDA_SO4
 
             WRITE(*,310) AUTO_CONC_MODE, EC_CALC, EC_FEED_TARGET
  310        FORMAT(' SOLEC: FEED EVENT (mode=',A1,') => EC=',F5.2,

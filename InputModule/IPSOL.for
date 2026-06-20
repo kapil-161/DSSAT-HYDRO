@@ -16,7 +16,7 @@ C-----------------------------------------------------------------------
      &                  SOLVOL,EC,PH,DO2,TEMP,
      &                  NO3_CONC,NH4_CONC,P_CONC,K_CONC,ISWHYDRO,
      &                  AUTO_PH,AUTO_VOL,AUTO_CONC,AUTO_O2,
-     &                  CHLEN)
+     &                  CA_CONC,MG_CONC,S_CONC,CHLEN)
 
       USE HydroFertData_mod
       IMPLICIT NONE
@@ -32,6 +32,7 @@ C-----------------------------------------------------------------------
       INTEGER IYEAR, IDOY, IDATE_5, IDATE_7
       REAL    SOLVOL,EC,PH,DO2,TEMP
       REAL    NO3_CONC,NH4_CONC,P_CONC,K_CONC
+      REAL    CA_CONC,MG_CONC,S_CONC
       REAL    CHLEN
 
       PARAMETER (ERRKEY='IPSOL ')
@@ -50,6 +51,9 @@ C     Initialize values to -99 (missing data indicator)
       NH4_CONC = -99.0
       P_CONC = -99.0
       K_CONC = -99.0
+      CA_CONC = -99.0
+      MG_CONC = -99.0
+      S_CONC  = -99.0
       CHLEN = -99.0
 
 C     Default: Hydroponic mode is OFF
@@ -82,7 +86,8 @@ C     Read the data line
       IF (ISECT .EQ. 1) THEN
 C        Read solution parameters including CHLEN
          READ (CHARTEST,*,IOSTAT=ERRNUM) LN,SOLVOL,EC,PH,DO2,TEMP,
-     &        NO3_CONC,NH4_CONC,P_CONC,K_CONC,CHLEN
+     &        NO3_CONC,NH4_CONC,P_CONC,K_CONC,CA_CONC,MG_CONC,S_CONC,
+     &        CHLEN
 
          IF (ERRNUM .NE. 0) THEN
 C          CHLEN is required for hydroponic experiments
@@ -104,7 +109,7 @@ C       Valid hydroponic parameters - activate HYDROPONIC mode
 C       Print confirmation message to indicate section was read
 C       SOLVOL is in mm from experiment file
         WRITE(*,100) SOLVOL,EC,PH,DO2,TEMP,NO3_CONC,NH4_CONC,P_CONC,
-     &               K_CONC,CHLEN
+     &               K_CONC,CA_CONC,MG_CONC,S_CONC,CHLEN
       ELSE
 C       SOLVOL <= 0 or -99: This treatment is soil-based
 C       Keep ISWHYDRO = 'N' and return silently
@@ -224,6 +229,9 @@ C-----------------------------------------------------------------------
      &        /,'   NH4-N            : ',F10.2,' mg/L',
      &        /,'   P                : ',F10.2,' mg/L',
      &        /,'   K                : ',F10.2,' mg/L',
+     &        /,'   Ca               : ',F10.2,' mg/L',
+     &        /,'   Mg               : ',F10.2,' mg/L',
+     &        /,'   S                : ',F10.2,' mg/L',
      &        /,'   Channel Length   : ',F10.1,' cm',/)
 
  120  FORMAT (' SOLUTION CHANGES: ',I3,' date(s) scheduled')
