@@ -622,7 +622,7 @@ C             PARHR (umol/m2 s)
 C             PARQC = 4.6 umol/J
 
         IF (PAR .GT. 1.E-4) THEN
-          PARHR = RADHR * PAR/SRAD
+          PARHR = RADHR * PAR/SRAD * 1.E6
         ELSE
 C         PARFAC = (0.43*(1.0-FRDIFR)+0.57*FRDIFR) * PARQC
 C          PARFAC = 2.0
