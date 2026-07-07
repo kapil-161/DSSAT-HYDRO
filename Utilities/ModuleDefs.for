@@ -541,6 +541,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL NA_CONC     ! Sodium concentration (mg/L)
         REAL CL_CONC     ! Chloride concentration (mg/L)
         REAL CA_CONC     ! Calcium concentration (mg/L)
+        REAL MG_CONC     ! Magnesium concentration (mg/L)
+        REAL S_CONC      ! Sulfur concentration (mg/L)
         ! EC stress factors (0.0 to 1.0, where 1.0 = no stress)
         REAL ECSTRESS_JMAX_NO3  ! Stress factor for NO3 Jmax (non-competitive inhibition)
         REAL ECSTRESS_JMAX_NH4  ! Stress factor for NH4 Jmax
@@ -884,6 +886,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('NA_CONC');  Value = SAVE_data % HYDRO % NA_CONC
         Case ('CL_CONC');  Value = SAVE_data % HYDRO % CL_CONC
         Case ('CA_CONC');  Value = SAVE_data % HYDRO % CA_CONC
+        Case ('MG_CONC');  Value = SAVE_data % HYDRO % MG_CONC
+        Case ('S_CONC');   Value = SAVE_data % HYDRO % S_CONC
         Case ('ECSTRESS_JMAX_NO3'); Value = SAVE_data % HYDRO % ECSTRESS_JMAX_NO3
         Case ('ECSTRESS_JMAX_NH4'); Value = SAVE_data % HYDRO % ECSTRESS_JMAX_NH4
         Case ('ECSTRESS_JMAX_K');   Value = SAVE_data % HYDRO % ECSTRESS_JMAX_K
@@ -1083,6 +1087,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('NA_CONC');  SAVE_data % HYDRO % NA_CONC = Value
         Case ('CL_CONC');  SAVE_data % HYDRO % CL_CONC = Value
         Case ('CA_CONC');  SAVE_data % HYDRO % CA_CONC = Value
+        Case ('MG_CONC');  SAVE_data % HYDRO % MG_CONC = Value
+        Case ('S_CONC');   SAVE_data % HYDRO % S_CONC  = Value
         Case ('ECSTRESS_JMAX_NO3'); SAVE_data % HYDRO % ECSTRESS_JMAX_NO3 = Value
         Case ('ECSTRESS_JMAX_NH4'); SAVE_data % HYDRO % ECSTRESS_JMAX_NH4 = Value
         Case ('ECSTRESS_JMAX_K');   SAVE_data % HYDRO % ECSTRESS_JMAX_K = Value

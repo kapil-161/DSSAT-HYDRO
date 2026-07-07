@@ -64,7 +64,8 @@ C=======================================================================
      &  TAVG,TDAY,TDEW,TGROAV,TGRODY,TINCR,TMAX,TMIN,HTMAX,HTMIN,
      &  HTDEW,HTDEW_SUM,RH,VPSAT,WINDAV,WINDHT,WINDSP,
      &  XLAT, SNUP_H, SNDN_H, TMPRAD,
-     &  HTMAX_RAW, HTMIN_RAW, TMAX_OFF, TMIN_OFF
+     &  HTMAX_RAW, HTMIN_RAW, TMAX_OFF, TMIN_OFF,
+     &  SRAD_RAW, SRAD_RATIO
       PARAMETER (TINCR=24./TS)
 
 !-----------------------------------------------------------------------
@@ -73,6 +74,7 @@ C     Initialize
       TDAY = 0.0
       NDAY = 0
       HTDEW_SUM = 0.0
+      SRAD_RATIO = 1.0
       WINDAV = WINDSP / 86.4 * (REFHT/WINDHT)**0.2
 
 C     For hourly weather mode, pre-read all RADHR values and derive
@@ -83,6 +85,7 @@ C     modifications are correctly applied to hourly temperatures.
       IF (MEWTH .EQ. 'H') THEN
         SNUP_H = 25.0
         SNDN_H = 0.0
+        SRAD_RAW = 0.0
         DO H = 1,TS
           CALL fio % get('WTH', YRDOY, H, 'SRADJ', TMPRAD)
           IF (TMPRAD .GT. 0.0) THEN
@@ -90,10 +93,16 @@ C     modifications are correctly applied to hourly temperatures.
             IF (HS .LT. SNUP_H) SNUP_H = HS - TINCR
             IF (HS .GT. SNDN_H) SNDN_H = HS
           ENDIF
+          SRAD_RAW = SRAD_RAW + TMPRAD * 3600.0 / 1.0E6
         ENDDO
         IF (SNUP_H .GT. 24.0) THEN
           SNUP_H = SNUP
           SNDN_H = SNDN
+        ENDIF
+        IF (SRAD_RAW .GT. 0.001) THEN
+          SRAD_RATIO = SRAD / SRAD_RAW
+        ELSE
+          SRAD_RATIO = 1.0
         ENDIF
 
 C       Read raw daily TMAX/TMIN from file (hour 1) and compute
@@ -149,6 +158,7 @@ C       Calculate sun angles and hourly weather variables.
      &      RADHR(H))                                       !Output
         ELSE
           CALL fio % get('WTH', YRDOY, H, 'SRADJ', RADHR(H))
+          RADHR(H) = RADHR(H) * SRAD_RATIO
         ENDIF
 
         CALL FRACD(
