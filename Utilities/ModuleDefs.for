@@ -533,6 +533,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL AREA        ! Field/growing area (m2) - from *FIELDS section
         REAL UNO3        ! NO3 uptake rate (kg/ha/d)
         REAL UNH4        ! NH4 uptake rate (kg/ha/d)
+        REAL UNO3_POT    ! Uncapped kinetic NO3 supply (kg/ha/d) - diagnostic
+        REAL UNH4_POT    ! Uncapped kinetic NH4 supply (kg/ha/d) - diagnostic
         REAL UPO4        ! P uptake rate (kg/ha/d)
         REAL UK          ! K uptake rate (kg/ha/d)
         REAL TRWUP_MM    ! Potential water uptake (mm/d) - for hydroponic system
@@ -585,6 +587,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL ROOT_RESP          ! Root respiration rate (g CO2/m2/day)
         REAL TRLV               ! Total root length density (cm root/cm2 soil)
         REAL NTOXS              ! NH4 toxicity stress factor (0-1, 1=no stress)
+        REAL ANDEM              ! Crop N demand (kg[N]/ha)
       End Type HydroType
 
 !     Data which can be transferred between modules
@@ -879,6 +882,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('K_CONC');   Value = SAVE_data % HYDRO % K_CONC
         Case ('UNO3');     Value = SAVE_data % HYDRO % UNO3
         Case ('UNH4');     Value = SAVE_data % HYDRO % UNH4
+        Case ('UNO3_POT'); Value = SAVE_data % HYDRO % UNO3_POT
+        Case ('UNH4_POT'); Value = SAVE_data % HYDRO % UNH4_POT
         Case ('UPO4');     Value = SAVE_data % HYDRO % UPO4
         Case ('UK');       Value = SAVE_data % HYDRO % UK
         Case ('TRWUP_MM'); Value = SAVE_data % HYDRO % TRWUP_MM
@@ -927,6 +932,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('ROOT_RESP');   Value = SAVE_data % HYDRO % ROOT_RESP
         Case ('TRLV');        Value = SAVE_data % HYDRO % TRLV
         Case ('NTOXS');       Value = SAVE_data % HYDRO % NTOXS
+        Case ('ANDEM');       Value = SAVE_data % HYDRO % ANDEM
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -1080,6 +1086,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('K_CONC');   SAVE_data % HYDRO % K_CONC  = Value
         Case ('UNO3');     SAVE_data % HYDRO % UNO3    = Value
         Case ('UNH4');     SAVE_data % HYDRO % UNH4    = Value
+        Case ('UNO3_POT'); SAVE_data % HYDRO % UNO3_POT = Value
+        Case ('UNH4_POT'); SAVE_data % HYDRO % UNH4_POT = Value
         Case ('UPO4');     SAVE_data % HYDRO % UPO4    = Value
         Case ('UK');       SAVE_data % HYDRO % UK      = Value
         Case ('TRWUP_MM'); SAVE_data % HYDRO % TRWUP_MM = Value
@@ -1128,6 +1136,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('ROOT_RESP');   SAVE_data % HYDRO % ROOT_RESP = Value
         Case ('TRLV');        SAVE_data % HYDRO % TRLV = Value
         Case ('NTOXS');       SAVE_data % HYDRO % NTOXS = Value
+        Case ('ANDEM');       SAVE_data % HYDRO % ANDEM = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 

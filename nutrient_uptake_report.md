@@ -75,13 +75,31 @@ The factor 100 converts root length from cm cm⁻² to cm m⁻². J_max and K_m 
 
 **Table 1**
 
-*Michaelis–Menten Parameters for Nitrogen Uptake in Lettuce*
+*Michaelis–Menten Parameters for Nitrogen Uptake in Lettuce: Model vs. Literature*
 
-| Parameter | NO₃⁻ | NH₄⁺ | Source |
-|---|---|---|---|
-| J_max (mg N cm⁻¹ root d⁻¹) | 0.0139 | 0.0184 | Silberbush et al. (2005), calibrated to DSSAT TRLV |
-| K_m (mg N L⁻¹) | 0.210 | 0.755 | Silberbush et al. (2005): 0.015 and 0.0539 mol m⁻³ |
-| C_min (mg N L⁻¹) | 0.028 | 0.028 | Silberbush et al. (2005): 0.002 mol m⁻³ |
+| Parameter | NO₃⁻ (model) | NO₃⁻ (Silberbush) | NH₄⁺ (model) | NH₄⁺ (Silberbush) |
+|---|---|---|---|---|
+| K_m (mmol N L⁻¹ ≡ mol m⁻³) | 0.015 | 0.015 | 0.0539 | 0.0539 |
+| K_m (mg N L⁻¹) | 0.210 | 0.210 | 0.755 | 0.755 |
+| C_min (mmol N L⁻¹) | 0.002 | 0.002 | 0.002 | 0.002 |
+| K_i (mg N L⁻¹) | 593.0 | — | 20.0 | — |
+| J_max | 0.550 mg cm⁻¹ d⁻¹ | 1.15×10⁻⁷ mol m⁻² s⁻¹ | 0.437 mg cm⁻¹ d⁻¹ | 1.52×10⁻⁷ mol m⁻² s⁻¹ |
+
+Model values (`LUGRO048.SPE`, line 138) as of 2026-07-24: K_m updated this session to match Silberbush et al. (2005) exactly (previously 29.400/31.680 mg N L⁻¹, an unexplained ~140x/42x deviation from literature — see correction note below). J_max was not converted from Silberbush's per-root-surface-area basis, since DSSAT/CROPGRO has no root surface area state variable (confirmed by inspection of `ROOTS.for` and `DATA.CDE`) and no verified literature root radius was available to perform that conversion; J_max therefore remains at its pre-existing calibrated value.
+
+**Independent cross-validation across all parameters (root-surface NO₃⁻ uptake from external solution, not vacuolar/tonoplast transport):**
+
+| Source | Method | J_max NO₃⁻ | K_m NO₃⁻ (mg N L⁻¹) | C_min / C₀ NO₃⁻ (mg N L⁻¹) |
+|---|---|---|---|---|
+| Silberbush et al. (2005) | Root surface area basis, lettuce in volcanic ash/rockwool | 1.15×10⁻⁷ mol m⁻² s⁻¹ (root area basis) | 0.210 | 0.028 |
+| Swiader & Freiji (1996) | Root dry weight basis, ion chromatography depletion, cv. Ostinata, ages 30–40d | 57.9–88.0 mg N g⁻¹ root dwt day⁻¹ (root mass basis) | 0.098–0.168 | 0.006–0.012 |
+| Wheeler et al. (1998) | Shoot dry weight basis, Lineweaver-Burke kinetics, cv. Ostinata, ages 20–27d | 6.9–60.3 mg N g⁻¹ shoot dwt day⁻¹ (shoot mass basis) | 0.126–4.958 (median 0.90) | not reported |
+
+All three J_max values use a different normalization basis from each other and from the model (root length) — none can be substituted into `LUGRO048.SPE` without restructuring `HYDRO_NUTRIENT.for` to scale by the corresponding basis (root area, root dry weight, or shoot dry weight respectively, in place of TRLV). Of the three, Swiader & Freiji's root-dry-weight basis is the only one directly usable without a code change beyond a scaling-variable swap, since DSSAT already computes root dry weight (RWAD) natively; this has not been implemented.
+
+K_m, unlike J_max, is a concentration and requires no root-geometry conversion. Three independent studies, using three different normalization bases (root area, root mass, shoot mass) and different analytical methods, converge on the same sub-1 to low-single-digit mg N/L range, corroborating the model's K_m = 0.210 mg N/L. Similarly, C_min/C₀ (the compensation concentration below which net uptake ceases) from Silberbush and Swiader & Freiji both fall in the very low, sub-0.03 mg N/L range, consistent with the model's C_min = 0.028 mg N/L (hardcoded in `HYDRO_NUTRIENT.for`, not read from SPE).
+
+By contrast, Sharkey et al. (2024, 2025) report a much higher K_m (17.3–17.9 mg N/L) from a whole-plant dry-mass-normalized lumped fit spanning a wide, mostly-saturating N range — the authors themselves note this fit is poorly constrained at low concentrations (their own Monod K_s and MM K_m disagree ~13x on the same dataset). Blom-Zandstra et al. (1990) report K_m = 5.0–7.8 mM (70–109 mg N/L) for nitrate transport across the leaf cell tonoplast (vacuole membrane) — a different transport process entirely (intracellular storage, not root uptake from external solution) and not comparable to the other four sources.
 
 Note: J_max values in the species file (LUGRO048.SPE) are in mg N per cm root length per day, calibrated for use with DSSAT's root length density variable (TRLV, cm root cm⁻² ground). The original Silberbush et al. (2005) Table 1 reports J_max in mol m⁻² s⁻¹ per unit root surface area; conversion to per-length units requires the mean root radius r₀. J_max for NO₃⁻ is further concentration-dependent due to NO₃⁻-inducible NRT expression. This induction is implemented in HYDRO_NUTRIENT as a multiplicative factor applied before the Michaelis–Menten equation: INDUCT_NO3 = 1 + 0.21 × (NO3_SOL / 14.0067), where NO3_SOL is in mg N L⁻¹ and 14.0067 converts to mol m⁻³. At a typical solution concentration of 82 mg N L⁻¹ (≈5.9 mol m⁻³, Heinen 1994 experiment), INDUCT_NO3 ≈ 2.23, making the effective J_max approximately 2.2 times the base value (0.0139 × 2.23 ≈ 0.031 mg cm⁻¹ d⁻¹). At high concentrations (150 mg N L⁻¹), INDUCT_NO3 ≈ 3.25 and effective J_max ≈ 0.045 mg cm⁻¹ d⁻¹.
 

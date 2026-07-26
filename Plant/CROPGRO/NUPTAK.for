@@ -181,7 +181,8 @@ C   HYDROPONIC MODE: Transpiration-driven mass flow uptake
 C-----------------------------------------------------------------------
       IF (ISWHYDRO .EQ. 'Y') THEN
         ANDEM = (NDMTOT - NDMSDR) * 10.0
-        
+        CALL PUT('HYDRO','ANDEM',ANDEM)
+
 C       Get P and K demands from previous day (stored by P_Plant/K_Plant INTEGR)
 C       Using yesterday's demand is correct explicit-Euler integration.
         CALL GET('HYDRO','PTOTDEM',PDEMAND)

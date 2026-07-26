@@ -30,6 +30,7 @@ C=======================================================================
       REAL NH4_TOX_K, NH4_TOX_N
       REAL UN_TOTAL, SCALE
       REAL UNO3_ACT, UNH4_ACT
+      REAL UNO3_POT, UNH4_POT   ! Uncapped kinetic supply (diagnostic)
       REAL SOLVOL, VOL_PER_HA, DEPL_NO3, DEPL_NH4
       REAL PH_AVAIL_NO3, PH_AVAIL_NH4, O2_STRESS
       REAL PH_KM_FACTOR_NO3, PH_KM_FACTOR_NH4
@@ -83,6 +84,10 @@ C     Table units are mol/m3, numerically equal to mmol/L.
         UNH4  = 0.0
         NTOXS = 1.0
         CALL PUT('HYDRO','NTOXS',NTOXS)
+        UNO3_POT = 0.0
+        UNH4_POT = 0.0
+        CALL PUT('HYDRO','UNO3_POT',UNO3_POT)
+        CALL PUT('HYDRO','UNH4_POT',UNH4_POT)
 
         WRITE(*,100) JMAX_NO3, KM_NO3, JMAX_NH4, KM_NH4,
      &               KI_NO3, KI_NH4, KI_TIN, NH4_TOX_K, NH4_TOX_N
@@ -154,6 +159,14 @@ C       through HYDRO_WATER, not as direct uptake.
         UNO3 = UNO3_ACT
         UNH4 = UNH4_ACT
 
+C       Potential (uncapped) kinetic supply - diagnostic only, not used
+C       in any flux. Records what the Haldane equation could deliver
+C       before the demand cap and reservoir depletion are applied.
+        UNO3_POT = UNO3_ACT
+        UNH4_POT = UNH4_ACT
+        CALL PUT('HYDRO','UNO3_POT',UNO3_POT)
+        CALL PUT('HYDRO','UNH4_POT',UNH4_POT)
+
 C       Cap at 1.0x demand
         UN_TOTAL = UNO3 + UNH4
         IF (UN_TOTAL .GT. ANDEM * 1.0) THEN
@@ -220,6 +233,14 @@ C       state after HYDRO_WATER has updated reservoir volume.
         UNH4 = JMAX_EFF_NH4 * C_NH4_EFF /
      &       (KM_EFF_NH4 + C_NH4_EFF + C_NH4_EFF*C_NH4_EFF/KI_NH4)
      &       * TRLV * 100.0 * PH_AVAIL_NH4 * O2_STRESS * TIN_INHIB
+
+C       Potential (uncapped) kinetic supply - diagnostic only, not used
+C       in any flux. This is the INTEGR-pass value and is what the
+C       NPOTD column in Solution.OUT reports.
+        UNO3_POT = UNO3
+        UNH4_POT = UNH4
+        CALL PUT('HYDRO','UNO3_POT',UNO3_POT)
+        CALL PUT('HYDRO','UNH4_POT',UNH4_POT)
 
 C       Re-apply demand cap (ANDEM is the current-day value from NUPTAK)
         UN_TOTAL = UNO3 + UNH4

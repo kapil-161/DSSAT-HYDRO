@@ -32,6 +32,8 @@ C     Solution state variables - retrieved from ModuleData
       REAL DO2_CALC, DO2_SAT                      ! mg/L
       REAL UNO3, UNH4, UPO4, UK                   ! kg/ha/d
       REAL SOLVOL_MM, SOLTEMP                     ! mm (solution depth), C
+      REAL ANDEM, NSUPD                           ! kg/ha/d - N demand, N supplied
+      REAL UNO3_POT, UNH4_POT, NPOTD              ! kg/ha/d - uncapped kinetic supply
 
       LOGICAL FEXIST
 
@@ -91,6 +93,11 @@ C       Solution concentrations (mg/L)
      &  '   NO3CL   NH4CL    PCCL    KCCL',
 C       Nutrient uptake rates (kg/ha/d)
      &  '   UNO3D   UNH4D   UPO4D     UKD',
+C       N demand, N supplied, and potential kinetic supply (kg/ha/d)
+C       NPOTD = what the Michaelis-Menten/Haldane equation could deliver
+C       before the demand cap; NSUPD = what was actually taken up
+     &  '   ANDEM   NSUPD',
+     &  '     NPOTD',
 C       EC (dS/m)
      &  '   ECCAL',
 C       pH
@@ -139,6 +146,13 @@ C       Nutrient uptake rates (kg/ha/d)
         CALL GET('HYDRO','UPO4',UPO4)
         CALL GET('HYDRO','UK',UK)
 
+C       N demand and N supplied (kg/ha/d)
+        CALL GET('HYDRO','ANDEM',ANDEM)
+        NSUPD = UNO3 + UNH4
+        CALL GET('HYDRO','UNO3_POT',UNO3_POT)
+        CALL GET('HYDRO','UNH4_POT',UNH4_POT)
+        NPOTD = UNO3_POT + UNH4_POT
+
 C       Solution properties
         CALL GET('HYDRO','EC',EC_CALC)
         CALL GET('HYDRO','PH',PH_CALC)
@@ -153,6 +167,7 @@ C       Get date
         WRITE (NOUTSL,200) YEAR, DOY, DAP,
      &    NO3_CONC, NH4_CONC, P_CONC, K_CONC,          ! mg/L
      &    UNO3, UNH4, UPO4, UK,                        ! kg/ha/d
+     &    ANDEM, NSUPD, NPOTD,                         ! kg/ha/d
      &    EC_CALC,                                     ! dS/m
      &    PH_CALC,                                     ! pH
      &    DO2_CALC, DO2_SAT,                           ! mg/L
@@ -161,6 +176,8 @@ C       Get date
  200    FORMAT(1X,I4,1X,I3.3,1X,I5,
      &    4(1X,F7.1),                                  ! Concentrations
      &    4(1X,F7.2),                                  ! Uptake rates
+     &    2(1X,F7.2),                                  ! N demand, N supplied
+     &    1X,F9.2,                                     ! N potential (uncapped)
      &    1X,F7.2,                                     ! EC
      &    1X,F7.2,                                     ! pH
      &    2(1X,F7.2),                                  ! DO2
@@ -198,6 +215,13 @@ C         Nutrient uptake rates (kg/ha/d)
           CALL GET('HYDRO','UPO4',UPO4)
           CALL GET('HYDRO','UK',UK)
 
+C         N demand and N supplied (kg/ha/d)
+          CALL GET('HYDRO','ANDEM',ANDEM)
+          NSUPD = UNO3 + UNH4
+          CALL GET('HYDRO','UNO3_POT',UNO3_POT)
+          CALL GET('HYDRO','UNH4_POT',UNH4_POT)
+          NPOTD = UNO3_POT + UNH4_POT
+
 C         Solution properties
           CALL GET('HYDRO','EC',EC_CALC)
           CALL GET('HYDRO','PH',PH_CALC)
@@ -215,6 +239,7 @@ C         Write final day output
           WRITE (NOUTSL,200) YEAR, DOY, DAP,
      &      NO3_CONC, NH4_CONC, P_CONC, K_CONC,
      &      UNO3, UNH4, UPO4, UK,
+     &      ANDEM, NSUPD, NPOTD,
      &      EC_CALC,
      &      PH_CALC,
      &      DO2_CALC, DO2_SAT,
