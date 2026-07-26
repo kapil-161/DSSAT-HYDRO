@@ -1,7 +1,7 @@
 $WEATHER DATA : Greenhouse, Wageningen University, The Netherlands
 
 @ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT
-  WAGA  51.970    5.670    12  16.3   4.0   2.0 -99.0
+  WAGA  51.970    5.670    12  16.3   4.0   2.0   2.0
 @  DATE  SRAD  TMAX  TMIN  RAIN  DEWP  WIND
 1991147   7.0  17.0  10.0   0.0  10.0   0.0
 1991148   7.0  17.0  10.0   0.0  10.0   0.0
