@@ -4,5 +4,5 @@
 ! Observed final harvest (DAS 49, DOY 203) from Heinen (1999) Exp 6705
 ! CWAM = shoot dry weight kg/ha at harvest
 
-@TRNO     DATE    CWAM
-     1  1991203  2862.1
+@TRNO     DATE     CWAM    CNAM
+     1   91203  2862.1   118.8
