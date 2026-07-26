@@ -1,0 +1,13 @@
+$BATCH(LETTUCE)
+!
+! Directory    : C:\DSSAT48\Lettuce
+! Command Line : C:\DSSAT48\DSCSM048.EXE CRGRO048 B DSSBatch_UFGA2201_Skyphos.v48
+! Crop         : Lettuce
+! Experiment   : UFGA2201.LUX
+! Treatments   : Skyphos cultivar (TRT 9-12, temperatures 24/26/28/30C)
+!
+@FILEX                                                                                        TRTNO     RP     SQ     OP     CO
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   9      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                  10      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                  11      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                  12      1      0      0      0

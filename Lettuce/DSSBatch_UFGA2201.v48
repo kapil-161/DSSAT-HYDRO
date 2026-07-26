@@ -1,0 +1,13 @@
+$BATCH(LETTUCE)
+!
+! Directory    : C:\DSSAT48\Lettuce
+! Command Line : C:\DSSAT48\DSCSM048.EXE CRGRO048 B DSSBatch_UFGA2201.v48
+! Crop         : Lettuce
+! Experiment   : UFGA2201.LUX
+! Treatments   : Rex cultivar (TRT 1-4, temperatures 24/26/28/30C)
+!
+@FILEX                                                                                        TRTNO     RP     SQ     OP     CO
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   1      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   2      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   3      1      0      0      0
+C:\DSSAT48\Lettuce\UFGA2201.LUX                                                                   4      1      0      0      0

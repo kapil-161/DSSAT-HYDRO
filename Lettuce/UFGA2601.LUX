@@ -32,9 +32,9 @@
 
 *PLANTING DETAILS
 @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
- 1 25349   -99  24.4  24.4     T     R  20.5     0     5  17.1     7    19   -99     3                        Salvius transplant
- 2 25349   -99  24.4  24.4     T     R  20.5     0     5   1.7     7    19   -99     3                        Casey transplant
- 3 25349   -99  24.4  24.4     T     R  20.5     0     5  14.6     7    19   -99     3                        MC transplant
+ 1 25349   -99  24.4  24.4     T     R  20.5     0     5  1.00     7    19   -99     3                        Salvius transplant
+ 2 25349   -99  24.4  24.4     T     R  20.5     0     5  1.00     7    19   -99     3                        Casey transplant
+ 3 25349   -99  24.4  24.4     T     R  20.5     0     5  1.00     7    19   -99     3                        MC transplant
 
 *IRRIGATION AND WATER MANAGEMENT
 @I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME

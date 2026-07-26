@@ -13,7 +13,7 @@
 ! CHTA  = canopy height at harvest (m)
 ! L#SX  = leaf number at harvest
 
-@TRNO     DATE   CWAM   LAIX   CHTA   L#SX
+@TRNO     DATE   CWAM   LAIX   CHTA   L#SM
      1   25016  2862.1    -99    -99    -99
      2   24354  1158.6   3.27  0.196    -99
      3   24354  1133.9   3.04  0.211    -99

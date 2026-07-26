@@ -1,0 +1,10 @@
+$BATCH(LETTUCE)
+!
+! Directory    : C:\DSSAT48\Lettuce
+! Command Line : C:\DSSAT48\DSCSM048.EXE CRGRO048 B DSSBatch_GTGA4.v48
+! Crop         : Lettuce
+! Experiment   : GTGA2401.LUX
+! ExpNo        : 4
+!
+@FILEX                                                                                        TRTNO     RP     SQ     OP     CO
+C:\DSSAT48\Lettuce\GTGA2401.LUX                                                                   5      1      0      0      0

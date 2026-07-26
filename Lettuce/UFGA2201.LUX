@@ -43,10 +43,10 @@ IhingerHof Research Station
 
 *PLANTING DETAILS
 @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
- 1 22103   -99  12.3  12.3     T     R    29     0     5     9     7    20   -99     3                        E1_24C_Apr13
- 2 22243   -99  12.3  12.3     T     R    29     0     5     9     7    20   -99     3                        E2_26C_Aug31
- 3 22195   -99  12.3  12.3     T     R    29     0     5     9     7    20   -99     3                        E3_28C_Jul14
- 4 22061   -99  12.3  12.3     T     R    29     0     5     9     7    20   -99     3                        E4_30C_Mar02
+ 1 22103   -99  12.3  12.3     T     R    29     0     5   1.0     7    20   -99     3                        E1_24C_Apr13
+ 2 22243   -99  12.3  12.3     T     R    29     0     5   1.0     7    20   -99     3                        E2_26C_Aug31
+ 3 22195   -99  12.3  12.3     T     R    29     0     5   1.0     7    20   -99     3                        E3_28C_Jul14
+ 4 22061   -99  12.3  12.3     T     R    29     0     5   1.0     7    20   -99     3                        E4_30C_Mar02
 
 *IRRIGATION (AUTOMATIC)
 @I  IEFF  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
@@ -88,21 +88,21 @@ IhingerHof Research Station
 
 !Modification in experiment file for hydroponics settings
 *HYDROPONIC SOLUTION
-@  L    SOLVOL(mm)    EC        PH       DO2      TEMP   NO3_CONC  NH4_CONC    P_CONC    K_CONC    CHLEN    CHSPC
-   1      50.0       1.50     5.75     8.0     20.0       150.0        12.0       40.0      250.0    183.0     15.0
-   2      50.0       1.50     5.75     8.0     20.0       150.0        12.0       40.0      250.0    183.0     15.0
-   3      50.0       1.50     5.75     8.0     20.0       150.0        12.0       40.0      250.0    183.0     15.0
-   4      50.0       1.50     5.75     8.0     20.0       150.0        12.0       40.0      250.0    183.0     15.0
+@L  SVOL    EC    PH   DO2  TEMP  NO3C  NH4C    PC    KC   CAC   MGC    SC  CHLN
+ 1  50.0  1.50  5.75   8.0  20.0 150.0  12.0  40.0 250.0 183.0  15.0 120.1 326.5
+ 2  50.0  1.50  5.75   8.0  20.0 150.0  12.0  40.0 250.0 183.0  15.0 120.1 326.5
+ 3  50.0  1.50  5.75   8.0  20.0 150.0  12.0  40.0 250.0 183.0  15.0 120.1 326.5
+ 4  50.0  1.50  5.75   8.0  20.0 150.0  12.0  40.0 250.0 183.0  15.0 120.1 326.5
 
 *HYDROPONIC CONTROL
 @  L  AUTO_PH  AUTO_VOL  AUTO_CONC  AUTO_O2
-   1     Y        Y         N          Y
+   1     Y        Y         O          Y
 
 *SIMULATION CONTROLS
 @N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
  1 GE              1     1     S 22061  2150 NFT Temp x Cultivar Test
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
- 1 OP              N     N     N     N     N     N     N     N     M
+ 1 OP              Y     Y     N     N     N     N     N     N     M
 @N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
  1 ME              H     M     E     R     S     L     Y     1     G     S     2
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
