@@ -994,8 +994,8 @@ C-----------------------------------------------------------------------
 C    Calculate true nitrogen concentration in leaf tissue for
 C     photosynthesis reduction.
 C-----------------------------------------------------------------------
-      IF ((WTLF - WCRLF) > 1.E-4) THEN
-         RNITP = 100.*WTNLF/(WTLF-WCRLF)
+      IF (WTLF > 1.E-4) THEN
+         RNITP = 100.*WTNLF/WTLF
       ELSE
          RNITP = PCNMIN
       ENDIF
