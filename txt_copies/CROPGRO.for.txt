@@ -112,6 +112,7 @@ C=======================================================================
       REAL PLIGLF, PLIGNO, PLIGRT, PLIGST
       REAL PODWTD, PG, PCLSD, PCCSD, PCNSD, PCNSH, PODWT
       REAL ECSTRESS_JMAX_NO3  ! EC stress factor for photosynthesis (hydroponic)
+      REAL NTOXS               ! NH4 toxicity stress factor (hydroponic)
       REAL PODNO
       REAL PGAVL, PLTPOP, PCARSH, PCH2O, PLIPSH,
      &    PLIGSD, PLIGSH, PMINSD, PMINSH, POASD, POASH,
@@ -252,6 +253,7 @@ C=======================================================================
       KTRANS = KEP
       KSEVAP = -99.   !Defaults to old method of light
                       !  extinction calculation for soil evap.
+
 
       IF (CROP .NE. 'FA' .AND. MEPHO .EQ. 'C') THEN
         CALL PHOTO(CONTROL, 
@@ -490,6 +492,9 @@ C-----------------------------------------------------------------------
           CALL GET('HYDRO', 'ECSTRESS_JMAX_NO3', ECSTRESS_JMAX_NO3)
           IF (ECSTRESS_JMAX_NO3 .GT. 0.0 .AND.
      &        ECSTRESS_JMAX_NO3 .LT. 1.0) PG = PG * ECSTRESS_JMAX_NO3
+          CALL GET('HYDRO','NTOXS',NTOXS)
+          IF (NTOXS .GT. 0.01 .AND. NTOXS .LT. 1.0)
+     &      PG = PG * NTOXS
         ENDIF
       ENDIF
 
@@ -716,10 +721,20 @@ C-----------------------------------------------------------------------
 !     In soil mode: calculate based on TRWUP vs EOP
 !***********************************************************************
       IF (ISWHYDRO .EQ. 'Y') THEN
-!       HYDROPONIC MODE: No water stress - unlimited water from solution
+!       HYDROPONIC MODE: Water stress depends on root supply vs transpiration demand
+!       TRWUP = root-limited potential supply (cm/d); EOP = potential transpiration (mm/d)
         SWFAC  = 1.0
         TURFAC = 1.0
-      ELSEIF (YRDOY .GT. YREMRG .AND. YREMRG .GT. 0 
+        IF (EOP .GT. 0.001) THEN
+          EP1 = EOP * 0.1
+          IF (TRWUP / EP1 .LT. RWUEP1) THEN
+            TURFAC = (1./RWUEP1) * TRWUP / EP1
+          ENDIF
+          IF (EP1 .GE. TRWUP) THEN
+            SWFAC = TRWUP / EP1
+          ENDIF
+        ENDIF
+      ELSEIF (YRDOY .GT. YREMRG .AND. YREMRG .GT. 0
      &                    .AND. ISWWAT .EQ. 'Y') THEN
 !       SOIL MODE: Calculate daily water stress factors (from SWFACS)
 !       EOP in mm/d
@@ -735,6 +750,10 @@ C-----------------------------------------------------------------------
             SWFAC = TRWUP / EP1
           ENDIF
         ENDIF
+      ELSE
+!       WATER=N: potential production, no water stress
+        SWFAC  = 1.0
+        TURFAC = 1.0
       ENDIF
 
 !-----------------------------------------------------------------------
@@ -780,12 +799,15 @@ C-----------------------------------------------------------------------
           CALL GET('HYDRO', 'ECSTRESS_JMAX_NO3', ECSTRESS_JMAX_NO3)
           IF (ECSTRESS_JMAX_NO3 .GT. 0.0 .AND.
      &        ECSTRESS_JMAX_NO3 .LT. 1.0) PG = PG * ECSTRESS_JMAX_NO3
+          CALL GET('HYDRO','NTOXS',NTOXS)
+          IF (NTOXS .GT. 0.01 .AND. NTOXS .LT. 1.0)
+     &      PG = PG * NTOXS
         ENDIF
       ENDIF
 
 !***********************************************************************
 !***********************************************************************
-!     DAILY INTEGRATION 
+!     DAILY INTEGRATION
 !***********************************************************************
       ELSE IF (DYNAMIC .EQ. INTEGR .AND. CROP .NE. 'FA') THEN
 !***********************************************************************
@@ -1030,8 +1052,10 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C    If ISWNIT = Y - Call soil N routines. Balance Available C and N
 C    If ISWNIT = N - Do not call soil N routines, N assumed to be limited by C
+C    In hydroponic mode NUPTAK must run regardless of ISWNIT to allow
+C    HYDRO_NUTRIENT to compute solution uptake (separate from soil N)
 C-----------------------------------------------------------------------
-      IF (ISWNIT .EQ. 'Y') THEN
+      IF (ISWNIT .EQ. 'Y' .OR. ISWHYDRO .EQ. 'Y') THEN
         CALL NUPTAK(INTEGR, ISWITCH,
      &    DLAYR, DUL, FILECC, KG2PPM, LL, NDMSDR, NDMTOT, !Input
      &    NH4, NO3, NLAYR, RLV, SAT, SW, PLTPOP, RTDEP,   !Input

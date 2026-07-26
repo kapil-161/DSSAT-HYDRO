@@ -152,7 +152,9 @@ C       DEMAND-BASED: Plant water demand from transpiration (EP)
 C       EP is already in mm/d (rate per unit area)
         PLANT_DEMAND_MM = EP  ! mm/d
 
-C       Store EP for nutrient uptake module (for mass flow calculations)
+C       Store EP for reference by other modules. NOTE: nutrient uptake is
+C       concentration-driven Michaelis-Menten (HYDRO_NUTRIENT, SOLPi, SOLKi),
+C       NOT transpiration mass flow. EP is not currently consumed anywhere.
         CALL PUT('HYDRO','EP',EP)
 
 C       Root-limited actual uptake: recompute supply with actual EP

@@ -50,6 +50,7 @@ C=======================================================================
      &  TABEX, TDAY, TPGFAC, XHLAI, XPOD
       REAL E_FAC
 
+
       REAL FNPGN(4), FNPGT(4) 
       REAL XPGSLW(15), YPGSLW(15) 
 

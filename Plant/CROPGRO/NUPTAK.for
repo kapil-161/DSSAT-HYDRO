@@ -8,7 +8,7 @@ C  03/01/1993 WTB Modified.
 C  01/20/1997 GH  Modified.
 C  07/10/1998 CHP modified for modular format.
 C  05/11/1998 GH  Incorporated in CROPGRO
-C  12/22/2025 Added hydroponic mass flow nutrient uptake (N, P, K)
+C  12/22/2025 Added hydroponic Michaelis-Menten nutrient uptake (N, P, K)
 C-----------------------------------------------------------------------
 C  Called from:  PLANT
 C  Calls:        ERROR, FIND, IGNORE, HYDRO_NUTRIENT, SOLPi, SOLKI
@@ -177,7 +177,8 @@ C-----------------------------------------------------------------------
         SNH4(L) = NH4(L) / KG2PPM(L)
       ENDDO
 C-----------------------------------------------------------------------
-C   HYDROPONIC MODE: Transpiration-driven mass flow uptake
+C   HYDROPONIC MODE: Michaelis-Menten nutrient uptake via HYDRO_NUTRIENT
+C   (N), SOLPi (P), SOLKi (K) - concentration-driven, NOT mass flow
 C-----------------------------------------------------------------------
       IF (ISWHYDRO .EQ. 'Y') THEN
         ANDEM = (NDMTOT - NDMSDR) * 10.0
