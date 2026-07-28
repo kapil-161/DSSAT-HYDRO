@@ -46,6 +46,13 @@
 !     C3 leafy-crop range): gross = 0.85*0.9413/(1-Rd) = 0.95-1.07; ceiling
 !     rounded to 1.1. Floor (0.600) is NOT literature-derived -- no published
 !     lower bound found; set only to bracket existing fitted cultivars.
+!     *** 2026-07-27: the MAXIMA row below is 1.400, NOT the 1.100 ceiling
+!     derived above. 1.400 is a FITTED bound and is not literature-supported;
+!     Rex/Skyphos/SITONIA/MC/Bibb all sit AT it. Two 10000-run GLUE
+!     calibrations (Salvius, MC) returned LFMAX pinned at whatever MAXIMA was
+!     set to (1.100 -> 1.100, STDEV 0.029; 1.400 -> 1.399, STDEV 0.116), so
+!     LFMAX is NOT identified by the current data. Treat these values as a
+!     prior, not an estimate, and do not cite Ahmed et al. 2022 for them.
 !   SLAVR [LIT] 180-950 cm2/g. Core range 310 (SLAMIN) - 910 (SLAMAX) cm2/g
 !     is Lorenz & Wiebe 1980 (DOI: 10.1016/0304-4238(80)90075-8), Table I,
 !     directly measured across light/temperature conditions; reference value
@@ -59,9 +66,17 @@
 !     total leaf area -- valid for this ratio regardless of single-leaf vs
 !     whole-plant basis) / DRY_WEIGHT (biomass_complete_dataset.csv, g),
 !     joined on treat/grow/DAS/variety/label_num, n=165, dw>0.05g filter:
-!       BG23-1251: 197.6-439.6 cm2/g, median 307.0, n=78 -- used as SLAVR.
-!       Waldmanns:  172.4-455.4 cm2/g, median 299.6, n=87 -- used as SLAVR
+!       BG23-1251: 197.6-439.6 cm2/g, median 307.0, n=78 -- ORIGINAL SLAVR.
+!       Waldmanns:  172.4-455.4 cm2/g, median 299.6, n=87 -- ORIGINAL SLAVR
 !         (300.0 rounded).
+!     *** 2026-07-27: SLAVR was refitted against LAI observations and NO
+!     LONGER equals these medians. Current values: BG23-1251 352.,
+!     Waldmanns 404., Salvius 450., MC 405. The refitted values remain inside
+!     the measured RANGES above but sit above the measured MEDIANS -- they are
+!     FITTED, not measured. Note SLAVR is a reference coefficient, not
+!     realized SLA: at these settings the model's realized SLAD is 307.4 for
+!     BG23-1251 (essentially on its 307.0 median) but 352.8 for Waldmanns
+!     (about 18% above its 299.6 median).
 !     SLA increased with DAS (255->320 cm2/g, day14->35) and was lowest in
 !     the hottest treatment t4 (255.5 avg, consistent with heat-stress leaf
 !     thickening); the medians above are taken across all DAS/treatments.
@@ -85,21 +100,23 @@
 !Coefficient #                           1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18
 !Calibration                             N     N     N     N     N     N     N     G     G     G     N     N     N     N     N     N     N     N
 
-999991 MINIMA               . DFAULT 12.33 0.000  35.0   4.0  11.0 50.00 40.00 1.000  255.  80.0 0.550  0.19  23.0  2.20  10.0  10.0 0.180 0.020
+999991 MINIMA               . DFAULT 12.33 0.000  35.0   4.0  11.0 50.00 40.00 1.000  255.  40.0 0.550  0.19  23.0  2.20  10.0  10.0 0.180 0.020
 
 999992 MAXIMA               . DFAULT 12.33 0.000  48.0   6.0  13.0 60.00 60.00 1.400  740. 160.0 0.800  0.25  23.0  2.20  40.0  10.0 0.180 0.020
 
-LU0001 Rex       4          . LU0401 13.09 0.000 47.52 4.542 12.78 51.60 42.00 1.394  441. 113.6 0.790 0.200 23.00 2.200 60.00 10.00 0.180 0.020
+LU0001 Rex       4          . LU0401 13.09 0.000 47.52 4.542 12.78 51.60 42.00 1.400  441. 113.6 0.790 0.200 23.00 2.200 60.00 10.00 0.180 0.020
 
-LU0002 Muir      4          . LU0401 13.09 0.000  37.0   6.0  13.0 55.00 40.00  1.02  416.  84.9  0.75  0.19  23.0   2.2  10.0  10.0  0.18  0.02
+LU0002 Muir      4          . LU0401 13.09 0.000  37.0   6.0  13.0 55.00 40.00 1.149  416.  84.9  0.75  0.19  23.0   2.2  10.0  10.0  0.18  0.02
 
-LU0003 Skyphos   4          . LU0401 13.09 0.000  36.0   6.0  16.0 82.00 20.00 1.383  488. 125.9  0.65  0.19  23.0   2.2  40.0  10.0  0.18  0.02
+LU0003 Skyphos   4          . LU0401 13.09 0.000  36.0   6.0  16.0 82.00 20.00 1.400  488. 125.9  0.65  0.19  23.0   2.2  40.0  10.0  0.18  0.02
 
-LU0004 SITONIA   4          . LU0401 13.09 0.000 46.39 5.819 11.65 53.41 20.00 1.150  395. 136.9 0.639 0.218  23.0   2.2  40.0  10.0  0.18  0.02
+LU0004 SITONIA   4          . LU0401 13.09 0.000 46.39 5.819 11.65 53.41 20.00 1.400  395. 136.9 0.639 0.218  23.0   2.2  40.0  10.0  0.18  0.02
 
-LU0201 BG23-1251 4          . LU0401 13.09 0.000  36.0   6.0  16.0 82.00 20.00 1.399  320. 111.8  0.65  0.19  23.0   2.2  40.0  10.0  0.18  0.02
+LU0201 BG23-1251 4          . LU0401 13.09 0.000  36.0   6.0  16.0 82.00 20.00 1.170  352. 111.8  0.65  0.19  23.0   2.2  40.0  10.0  0.18  0.02
 
-LU0202 WALDMANNS 4          . LU0401 13.09 0.000 37.26 5.843 11.13 52.15 42.00 1.388  367. 103.3 0.736  0.25  23.0   2.2  60.0  10.0  0.18  0.02
+LU0202 WALDMANNS 4          . LU0401 13.09 0.000 37.26 5.843 11.13 52.15 42.00 1.119  404. 103.3 0.736  0.25  23.0   2.2  60.0  10.0  0.18  0.02
 
-LU0301 Bibb                 . LU0401 13.09 0.000 37.26 5.843 11.13 52.15 42.00 1.400 450.0 148.0 0.736  0.25  23.0   2.2  60.0  10.0  0.18  0.02
+LU0301 Bibb                 . LU0401 13.09 0.000 40.99 5.843 11.13 52.15 42.00 1.400 450.0 148.0 0.736  0.25  23.0   2.2  60.0  10.0  0.18  0.02
 
+LU0006 Salvius              . LU0402 13.09 0.000 34.10  4.90 11.90 58.77 42.00 1.224  450. 96.90 0.596 0.210 23.00 2.200 40.00 10.00 0.180  0.02
+LU0007 MC                   . LU0402 13.09 0.000 34.10  4.90 11.90 58.77 42.00 1.400  405. 63.10 0.596 0.210 23.00 2.200 40.00 10.00 0.180  0.02

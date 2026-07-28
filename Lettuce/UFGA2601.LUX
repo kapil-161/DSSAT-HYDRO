@@ -12,14 +12,12 @@
 
 *TREATMENTS                        -------------FACTOR LEVELS------------
 @N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM HS HC
- 1 1 0 0 Salvius                    1  1  0  0  1  0  0  0  0  0  0  1  1  1  1
- 2 1 0 0 Casey                      2  1  0  0  2  0  0  0  0  0  0  1  1  2  1
- 3 1 0 0 MC                         3  1  0  0  3  0  0  0  0  0  0  1  1  3  1
+ 1 1 0 0 Salvius                    1  1  0  0  1  0  0  0  0  0  1  1  1  1  1
+ 3 1 0 0 MC                         3  1  0  0  2  0  0  0  0  0  1  1  1  1  1
 
 *CULTIVARS
 @C CR INGENO CNAME
  1 LU LU0006 Salvius
- 2 LU LU0005 Casey
  3 LU LU0007 MC
 
 *FIELDS
@@ -32,9 +30,9 @@
 
 *PLANTING DETAILS
 @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
- 1 25349   -99  24.4  24.4     T     R  20.5     0     5  1.00     7    19   -99     3                        Salvius transplant
- 2 25349   -99  24.4  24.4     T     R  20.5     0     5  1.00     7    19   -99     3                        Casey transplant
- 3 25349   -99  24.4  24.4     T     R  20.5     0     5  1.00     7    19   -99     3                        MC transplant
+ 1 25349   -99  24.4  24.4     T     R  20.5     0     5 12.68    14    19   -99     3                        Transplant_Salvius (DW ratio 0.07/0.38 x avg FW 0.282g)
+ 2 25349   -99  24.4  24.4     T     R  20.5     0     5 13.43    14    19   -99     3                        Transplant_MC (DW ratio 0.06/0.29 x avg FW 0.266g)
+
 
 *IRRIGATION AND WATER MANAGEMENT
 @I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
@@ -48,15 +46,20 @@
 @H HDATE  HSTG  HCOM HSIZE   HPC  HBPC HNAME
  1 26013 GS000     C     A   -99   -99 Final_Harvest_DAS29
 
+*ENVIRONMENT MODIFICATIONS
+! CO2 measured directly (Indoor CO2 Sensor 1/2, combined mean 453 ppm); DSSAT's
+! default background CO2 curve (426.5 ppm) was being used in the absence of this override.
+@E ODATE EDAY  ERAD  EMAX  EMIN  ERAIN ECO2  EDEW  EWIND ENVNAME
+ 1 25349 A   0 A   0 A   0 A   0 A   0 R 453 A   0 A   0 Measured_chamber_CO2
+
 *CHEMICAL APPLICATIONS
 @C CDATE CHCOD CHAMT  CHME CHDEP   CHT..CHNAME
  1   -99 -99     -99 -99     -99   -99  ot used in hydroponics
 
 *HYDROPONIC SOLUTION
 @L  SVOL    EC    PH   DO2  TEMP  NO3C  NH4C    PC    KC   CAC   MGC    SC  CHLN
- 1  50.0  1.55  6.55   8.0  19.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 305.0
- 2  50.0  1.55  6.55   8.0  19.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 305.0
- 3  50.0  1.55  6.55   8.0  19.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 305.0
+ 1  50.0  1.55  6.00   8.0  19.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 305.0
+
 
 *HYDROPONIC CONTROL
 @L  AUPH  AUVL  AUCN  AUO2
