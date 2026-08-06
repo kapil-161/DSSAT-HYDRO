@@ -305,7 +305,11 @@ C     0.6 IS A SCALAR, COULD BE LESS, was once 0.8 and 0.7
 C     0.7 appears to be too much for peanut, but not for soybean.
 C-----------------------------------------------------------------------
       FRLF  = (1.0 + 0.6*(1.0-CUMTUR))*(1.-FRRT)*FRLF/(FRLF + FRSTM)
-      FRLF = MIN(FRLF, 0.90*(1. - FRRT))
+C     Raised from 0.90 to 0.97: 0.90 forced >=10% of veg growth to stem
+C     regardless of YLEAF/YSTEM, blocking low-stem species (e.g. mustard
+C     greens) from matching observed stem weight. Lettuce ratio stays
+C     under 0.90 already, so this is a no-op for it.
+      FRLF = MIN(FRLF, 0.97*(1. - FRRT))
       FRSTM = 1.0 - FRRT - FRLF
 C-----------------------------------------------------------------------
 C     To prevent negative partitioning to root and limit leaf plus
@@ -325,19 +329,6 @@ C-----------------------------------------------------------------------
       WLDOTN = FRLF * VGRDEM
       WSDOTN = FRSTM * VGRDEM
       WRDOTN = FRRT * VGRDEM
-      
-C     Apply EC stress to leaf expansion (morphological suppression)
-C     Plants maintain functional balance: reduced root growth -> reduced leaf expansion
-      CALL GET('HYDRO','ECSTRESS_LEAF',ECSTRESS_LEAF)
-      IF (ECSTRESS_LEAF .LT. 0.1) ECSTRESS_LEAF = 1.0
-      WLDOTN = WLDOTN * ECSTRESS_LEAF
-
-
-      IF (MOD(DAS, 5) .EQ. 0) THEN
-         WRITE(*,'(A,I4,A,F6.3,A,F8.4)') 'VEGGR DAS:', DAS,
-     &    ' ECSTRESS_LEAF:', ECSTRESS_LEAF,
-     &    ' WLDOTN:', WLDOTN
-      ENDIF
 
 C-----------------------------------------------------------------------
 C     Compute maximum N required for tissue growth

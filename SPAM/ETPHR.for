@@ -520,9 +520,10 @@ C     Temperature and saturating CO2.
 C     Temperature effect on LMXREF at saturating CO2 via lookup table.
 C     Sawtooth shape i.e. linear increase to peak, then linear decrease.
 C     Based on analysis of LMXREF using Tenhunen's (1976) data with QEFF
-C     from Ehleringer and Bjorkman (1977).  TEMPMX scaled to 1.0 at 30 oC.
+C     from Ehleringer and Bjorkman (1977).  TEMPMX scaled to 1.0 at 25 oC
+C     (moved from the original 30 oC to match the lowered XLMAXT plateau).
 
-      TEMPMX = TABEX(YLMAXT,XLMAXT,TEMPHR,6)/TABEX(YLMAXT,XLMAXT,30.0,6)
+      TEMPMX = TABEX(YLMAXT,XLMAXT,TEMPHR,6)/TABEX(YLMAXT,XLMAXT,25.0,6)
 
 C     Minimum night temp effect on Pmax next day, quadratic function
 C     after Mike Bell, peanut.  ONLY the first two numbers are used.

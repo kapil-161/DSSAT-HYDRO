@@ -64,7 +64,7 @@ C=======================================================================
      &  TAVG,TDAY,TDEW,TGROAV,TGRODY,TINCR,TMAX,TMIN,HTMAX,HTMIN,
      &  HTDEW,HTDEW_SUM,RH,VPSAT,WINDAV,WINDHT,WINDSP,
      &  XLAT, SNUP_H, SNDN_H, TMPRAD,
-     &  HTMAX_RAW, HTMIN_RAW, TMAX_OFF, TMIN_OFF,
+     &  HTMAX_RAW, HTMIN_RAW, TMAX_OFF, TMIN_OFF, HTMAX_H, HTMIN_H,
      &  SRAD_RAW, SRAD_RATIO
       PARAMETER (TINCR=24./TS)
 
@@ -86,6 +86,10 @@ C     modifications are correctly applied to hourly temperatures.
         SNUP_H = 25.0
         SNDN_H = 0.0
         SRAD_RAW = 0.0
+C       Init to sentinels so the MAX/MIN below is correct even if a day's
+C       hourly TMAX/TMIN readings are missing (FlexibleIO returns -99).
+        HTMAX_RAW = -99.0
+        HTMIN_RAW = 999.0
         DO H = 1,TS
           CALL fio % get('WTH', YRDOY, H, 'SRADJ', TMPRAD)
           IF (TMPRAD .GT. 0.0) THEN
@@ -94,6 +98,17 @@ C     modifications are correctly applied to hourly temperatures.
             IF (HS .GT. SNDN_H) SNDN_H = HS
           ENDIF
           SRAD_RAW = SRAD_RAW + TMPRAD * 3600.0 / 1.0E6
+
+C         Read raw hourly TMAX/TMIN and track the day's true max/min,
+C         instead of relying on a single hour (which biased the offset
+C         below -- hour 1 always falls at night, so the old code compared
+C         the daily max against a night reading, inflating every hour's
+C         temperature by half the day/night range whenever EMAX/EMIN were
+C         both unmodified ('A 0'), i.e. with nothing to actually correct).
+          CALL fio % get('WTH', YRDOY, H, 'TMAX', HTMAX_H)
+          CALL fio % get('WTH', YRDOY, H, 'TMIN', HTMIN_H)
+          IF (HTMAX_H .GT. -90.0) HTMAX_RAW = MAX(HTMAX_RAW, HTMAX_H)
+          IF (HTMIN_H .GT. -90.0) HTMIN_RAW = MIN(HTMIN_RAW, HTMIN_H)
         ENDDO
         IF (SNUP_H .GT. 24.0) THEN
           SNUP_H = SNUP
@@ -105,13 +120,18 @@ C     modifications are correctly applied to hourly temperatures.
           SRAD_RATIO = 1.0
         ENDIF
 
-C       Read raw daily TMAX/TMIN from file (hour 1) and compute
-C       offset vs WTHMOD-modified TMAX/TMIN so EMAX/EMIN applies
-C       correctly to hourly temperatures in controlled environments.
-        CALL fio % get('WTH', YRDOY, 1, 'TMAX', HTMAX_RAW)
-        CALL fio % get('WTH', YRDOY, 1, 'TMIN', HTMIN_RAW)
-        TMAX_OFF = TMAX - HTMAX_RAW
-        TMIN_OFF = TMIN - HTMIN_RAW
+C       Offset vs WTHMOD-modified daily TMAX/TMIN so EMAX/EMIN environment
+C       modifications (additive/replace) apply correctly to hourly temps
+C       in controlled environments. With no EMAX/EMIN override, TMAX/TMIN
+C       here equal the raw daily max/min, so both offsets are now exactly
+C       zero (as they should be) instead of the old asymmetric bias.
+        IF (HTMAX_RAW .GT. -90.0 .AND. HTMIN_RAW .LT. 900.0) THEN
+          TMAX_OFF = TMAX - HTMAX_RAW
+          TMIN_OFF = TMIN - HTMIN_RAW
+        ELSE
+          TMAX_OFF = 0.0
+          TMIN_OFF = 0.0
+        ENDIF
       ELSE
         SNUP_H = SNUP
         SNDN_H = SNDN
@@ -201,7 +221,11 @@ C       Calculate sun angles and hourly weather variables.
       ENDDO
 
       IF (PAR .LE. 0.) THEN
-        PAR = 2.0 * SRAD
+C       Match the PARFAC formula HPAR actually used hour-by-hour above,
+C       instead of the old flat 2.0x approximation, so this reported
+C       daily PAR (WEATHER%PAR, Weather.OUT PARD) reflects what was
+C       really consumed rather than a coincidentally-similar guess.
+        PAR = SRAD * (0.43 + 0.12*EXP(-SRAD/2.8)) * 4.6
       ENDIF
 
       RETURN
@@ -632,7 +656,12 @@ C             PARHR (umol/m2 s)
 C             PARQC = 4.6 umol/J
 
         IF (PAR .GT. 1.E-4) THEN
-          PARHR = RADHR * PAR/SRAD * 1.E6
+C         PAR/SRAD = (mol/m2-d)/(MJ/m2-d) = mol/MJ = 1.E-6 mol/J = umol/J
+C         already in the correct target unit -- no further scaling needed.
+C         (Previous "* 1.E6" here inflated PARHR by 1,000,000x whenever a
+C         weather file supplied PAR directly; likely never exercised before
+C         since PAR columns are rare in DSSAT weather files.)
+          PARHR = RADHR * PAR/SRAD
         ELSE
 C         PARFAC = (0.43*(1.0-FRDIFR)+0.57*FRDIFR) * PARQC
 C          PARFAC = 2.0

@@ -182,8 +182,8 @@ C-----------------------------------------------------------------------
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. EMERG) THEN
 !-----------------------------------------------------------------------
-        CANHT  = TABEX(YVSHT,XVSHT,VSTAGE,10)       
-        CANWH  = TABEX(YVSWH,XVSHT,VSTAGE,10)       
+        CANHT  = TABEX(YVSHT,XVSHT,VSTAGE,10)
+        CANWH  = TABEX(YVSWH,XVSHT,VSTAGE,10)
 
 !***********************************************************************
 !***********************************************************************
@@ -243,10 +243,10 @@ C       width.
 !-----------------------------------------------------------------------
       RCANWH= MAX(0.0,RVSTGE) * TABEX(YVSWH,XVSHT,VSTAGE,10) * HWTEM *
      &  TURFAC * WPAR * RWIDTH * CUMNHT
-      CANWH = CANWH + RCANWH 
+      CANWH = CANWH + RCANWH
 
 !     Set minimum Canopy width based on lookup function
-      CANWH = MAX(CANWH, TABEX(YVSWH, XVSHT, 0.0, 10))  
+      CANWH = MAX(CANWH, TABEX(YVSWH, XVSHT, 0.0, 10))
       CANWH = MIN(CANWH,ROWSPC)
 
 !***********************************************************************

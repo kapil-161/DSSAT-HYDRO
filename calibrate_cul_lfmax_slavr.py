@@ -1,124 +1,122 @@
 #!/usr/bin/env python3
-"""Calibrate LFMAX and SLAVR in LUGRO048.CUL for LU0301 Bibb against the
-literature-correct Dynamic-mu growth trajectory for the 132 mg/L N treatment.
+"""Calibrate LFMAX / SLAVR in LUGRO048.CUL against final observed CWAM
+(kg/ha) for all 9 optimum-treatment cultivars (DSSBatch_OPT.v48).
 
-Adapted from a prior Mac/UFGA2201-based version for this project's actual
-setup: Windows paths, GTGA2401.LUX treatment 5, cultivar LU0301 (Bibb).
+Generalized from a Bibb-only, literature-growth-curve-fitting version:
+this one calibrates every cultivar in the optimum-treatment table against
+its own single final observed CWAM value, and reads its LFMAX/SLAVR search
+bounds directly from LUGRO048.CUL's own MINIMA/MAXIMA rows (VAR# 999991 /
+999992) instead of hardcoding per-cultivar literature bounds -- edit those
+two rows in the CUL file and this script's search space changes with them.
 
-Why Dynamic-mu instead of the raw 6-point Table 3 data (Sharkey et al. 2024,
-Agriculture 14(8):1358): a follow-up paper (Sharkey et al. 2025, Agriculture
-15(9):1927) shows lettuce RGR decays with maturity rather than staying
-constant (pure exponential/Monod overestimates mid-growth then runs away
-unrealistically — e.g. predicts 5.9 kg lettuce by 44 DAT). Fitting DSSAT's
-CUL growth params to the raw sparse points let LFMAX/SLAVR chase noise and
-produced a curve-SHAPE mismatch no 2-3 parameter combination could resolve
-(model overshot early growth, undershot late growth, or vice versa).
+The 9 (FILEX, TRTNO) pairs are read directly from DSSBatch_OPT.v48 itself
+(not duplicated here) so they can never drift out of sync with the batch
+file used everywhere else in this project. Only VAR_ID and the observed
+CWAM (which aren't in the batch file) are kept in TREATMENT_INFO below, in
+the same order as the batch file's lines.
 
-The Dynamic-mu model (Eq. S6 in the 2025 paper) gives the actual underlying
-smooth curve: mu(t) = mu_max*[N]/([N]+Ks_N) for t<=d, plus linear maturity
-decay m*(t-d) for t>d. Integrating mu over time and exponentiating from
-DM0 reproduces the raw Table 3 points almost exactly (e.g. predicted 1937.3
-kg/ha at DAT32 vs observed 1936.0) while also correctly capturing the
-deceleration/plateau shape — and predicts the literature-stated peak dry
-mass day (41.7 DAT), an independent validation that this curve is right.
-Parameters used (Table 2, dry mass SMND-mu, fit to mass):
-  mu_max=0.334 mgDM/mgDM/d, Ks_N=1.833 mg/L, m=-0.0119, d=14.0 days,
-  DM0=2.198 mg (Sharkey et al. 2024 dataset, day-0 seedling mass).
-P and K assumed non-limiting at the 132 mg/L (baseline MSS) treatment, so
-the single-nutrient N term approximates the full multi-nutrient model.
-
-DAT (days after transplant) maps to DAP in PlantGro.OUT (DAP=0 at transplant
-day 23014). Run mode is 'C' (single treatment), NOT 'A' (runs all treatments
-silently ignoring any trailing treatment-number arg — confirmed in
-CSM_Main/CSM.for).
+Each grid point runs a single treatment via a throwaway 1-line batch file
+(mode B), then reads CWAMS (simulated CWAM) from Evaluate.OUT -- the same
+field ($28, 1-indexed / [27] 0-indexed) used by hand all session. Mode B
+with a real DSSBatch-style line is used instead of mode C + PlantGro.OUT
+so a single, already-proven parsing path covers every experiment.
 """
 from __future__ import annotations
 
 import json
-import math
 import re
 import shutil
 import subprocess
 from pathlib import Path
 
-ROOT     = Path("C:/DSSAT48")
-GENO     = ROOT / "Genotype"
-LETTUCE  = ROOT / "Lettuce"
+ROOT    = Path("C:/DSSAT48")
+GENO    = ROOT / "Genotype"
+LETTUCE = ROOT / "Lettuce"
 
-CUL      = GENO / "LUGRO048.CUL"
-MODEL    = ROOT / "dscsm048.exe"
-FILEX    = "GTGA2401.LUX"
-TRTNO    = "5"
-PLANTGRO = LETTUCE / "PlantGro.OUT"
+CUL       = GENO / "LUGRO048.CUL"
+MODEL     = ROOT / "dscsm048.exe"
+OPT_BATCH = LETTUCE / "DSSBatch_OPT.v48"
+TMP_BATCH = LETTUCE / "_calib_tmp.v48"
+EVALUATE  = LETTUCE / "Evaluate.OUT"
 
-VAR_ID   = "LU0301"
-PPOP     = 16.0  # plants/m2, from GTGA2401.LUX *PLANTING DETAILS
+# Fixed-width columns for LFMAX/SLAVR/SIZLF -- confirmed identical across
+# every cultivar row (incl. MINIMA/MAXIMA) in LUGRO048.CUL.
+LFMAX_COL = slice(79, 85)
+SLAVR_COL = slice(85, 91)
+SIZLF_COL = slice(91, 97)
 
-# Dynamic-mu SMND-mu dry-mass parameters (Sharkey et al. 2025, Table 2)
-MU_MAX  = 0.334   # mgDM mgDM^-1 d^-1
-KS_N    = 1.833   # mg/L
-MAT_M   = -0.0119 # maturity decay rate
-DELAY_D = 14.000  # days before decay begins
-DM0_MG  = 2.198   # mg/plant at t=0
-N_CONC  = 132.24  # mg/L, 132 mg/L (100% MSS baseline) treatment
+# VAR_ID and observed final CWAM (kg/ha) for each of the 9 optimum
+# treatments, in the SAME ORDER as the data lines in DSSBatch_OPT.v48.
+# obs values and cultivar assignments per project_optimum_treatments.
+TREATMENT_INFO = [
+    # label,       VAR_ID,   obs_cwam
+    ("Bibb",       "LU0301", 1936.0),
+    ("Rex",        "LU0001", 1420.0),
+    ("Muir",       "LU0002", 1165.0),
+    ("Skyphos",    "LU0003", 1677.0),
+    ("BG23-1251",  "LU0201", 1796.9),
+    ("Waldmanns",  "LU0202", 1826.8),
+    ("SITONIA",    "LU0004", 2862.1),
+    ("Salvius",    "LU0006", 1350.3),
+    ("MC",         "LU0007", 1551.4),
+]
 
-
-def _mu_inst(t: float) -> float:
-    base = MU_MAX * N_CONC / (N_CONC + KS_N)
-    return base if t <= DELAY_D else base + MAT_M * (t - DELAY_D)
-
-
-def _dm_at(t: float, steps: int = 2000) -> float:
-    """Integrate RGR to get dry mass (mg/plant) at day t via Dynamic-mu."""
-    if t <= 0:
-        return DM0_MG
-    dt = t / steps
-    log_dm = math.log(DM0_MG)
-    tt = 0.0
-    for _ in range(steps):
-        log_dm += _mu_inst(tt + dt / 2) * dt
-        tt += dt
-    return math.exp(log_dm)
-
-
-# DAT(=DAP) -> Dynamic-mu-predicted CWAM (kg/ha), DAT 14-32 only.
-# Excludes DAT<14 per the source papers' own convention (Sharkey et al. 2024/
-# 2025 exclude <=14 DAT when fitting growth-rate parameters, citing high
-# variability/instability in young-plant measurements); empirically this
-# also excludes the window where DSSAT's own startup transient (near-zero
-# simulated biomass while the literature curve already shows small but real
-# growth) dominates the error and isn't informative for CUL calibration.
-OBS_CWAM: dict[int, float] = {
-    dat: (_dm_at(dat) / 1000.0) * PPOP * 10.0 for dat in range(14, 33)
-}
-
-# LFMAX is now fixed at 1.100 mg CO2/m2-s — literature-derived ceiling from
-# Ahmed et al. 2022 (Horticulturae 8(3):270): measured peak net Pn of 20.6
-# umol CO2/m2/s (cv. Tiberius, 1000 ppm CO2, 300 umol/m2/s light, 0.75 m/s
-# air speed) = 0.9066 mg CO2/m2/s net. Converted to DSSAT's LFMAX basis
-# (350 ppm CO2, GROSS pre-respiration) using the SPE file's own CO2-response
-# curve (CCMP=80, CCMAX=2.09, CCEFF=0.0105 -> 350/1000ppm ratio=0.9413) and an
-# assumed leaf dark respiration of 10-20% of gross (standard C3 leafy-crop
-# range): gross = 0.9066*0.9413/(1-Rd) = 0.95-1.07 mg CO2/m2-s. Treat 1.1 as
-# the ceiling (not the search variable) — no longer a free parameter.
-# SLAVR genus range per SPE comments: 310 (low light/cold) to 910 (high
-# light/warm) cm2/g (Lorenz & Wiebe 1980) — this remains the free parameter.
-# SIZLF bounds from CUL MINIMA/MAXIMA rows: 50.0-650.0 (data-driven, no
-# direct literature value found for lettuce SIZLF/SIZREF).
-LFMAX_FIXED = 1.100  # literature ceiling, not searched
-SLAVR_GRID = [310, 400, 500, 580, 660, 740, 820, 900]  # within SPE SLAMIN-SLAMAX
-SIZLF_GRID = [250, 350, 450, 550, 600]
-SLAVR_FINE_STEP = 10
-SIZLF_FINE_STEP = 20
+# Coarse-grid resolution for the joint LFMAX x SLAVR search, then a fine
+# tune pass around the coarse best. SIZLF is left at its current per
+# cultivar value -- it shapes leaf-size distribution, not total biomass.
+LFMAX_STEPS = 5
+SLAVR_STEPS = 6
+FINE_LFMAX_STEP = 0.02
+FINE_SLAVR_STEP = 10
+FINE_PASSES = 3
 
 
-# ---------------------------------------------------------------------------
-# CUL file helpers — fixed-width patch at known column offsets for LU0301
-# ---------------------------------------------------------------------------
+def read_bounds() -> dict[str, float]:
+    """Read MINIMA/MAXIMA rows from the live CUL file -- bounds are
+    whatever is currently in the file, not a hardcoded literature number.
+    Editing the MINIMA/MAXIMA rows in LUGRO048.CUL changes what this
+    script's search space is, next run."""
+    bounds: dict[str, float] = {}
+    for line in CUL.read_text().splitlines():
+        if line.startswith("999991"):  # MINIMA
+            bounds["lfmax_min"] = float(line[LFMAX_COL])
+            bounds["slavr_min"] = float(line[SLAVR_COL])
+        elif line.startswith("999992"):  # MAXIMA
+            bounds["lfmax_max"] = float(line[LFMAX_COL])
+            bounds["slavr_max"] = float(line[SLAVR_COL])
+    missing = {"lfmax_min", "lfmax_max", "slavr_min", "slavr_max"} - bounds.keys()
+    if missing:
+        raise RuntimeError(f"MINIMA/MAXIMA rows missing fields: {missing}")
+    return bounds
+
+
+def read_opt_batch_template() -> tuple[str, list[str]]:
+    """Split DSSBatch_OPT.v48 into (preamble, data_lines). The preamble is
+    everything through the @FILEX header line, kept byte-for-byte -- a
+    minimal hand-built 3-line batch (just $BATCH + @FILEX + one data line)
+    reproducibly fails with "Error in the format of the batch file" from
+    dscsm048.exe, so the real file's full comment block is reused rather
+    than reconstructed."""
+    all_lines = OPT_BATCH.read_text().splitlines()
+    preamble, data_lines = [], []
+    in_data = False
+    for l in all_lines:
+        if l.lstrip().startswith("@FILEX"):
+            preamble.append(l)
+            in_data = True
+        elif in_data:
+            if l.strip():
+                data_lines.append(l)
+        else:
+            preamble.append(l)
+    if len(data_lines) != len(TREATMENT_INFO):
+        raise RuntimeError(
+            f"DSSBatch_OPT.v48 has {len(data_lines)} treatment lines but "
+            f"TREATMENT_INFO has {len(TREATMENT_INFO)} -- keep them in sync")
+    return "\n".join(preamble) + "\n", data_lines
+
 
 def _patch_line(line: str, lfmax: float, slavr: float, sizlf: float) -> str:
-    # Each field is 6 chars wide, right-aligned, trailing space included:
-    # line[79:97] == "1.600 580.0 600.0 " -> three 6-char fields "1.600 "+"580.0 "+"600.0 "
     lfmax_f = f"{lfmax:.3f}".rjust(5) + " "
     slavr_f = f"{slavr:.1f}".rjust(5) + " "
     sizlf_f = f"{sizlf:.1f}".rjust(5) + " "
@@ -128,161 +126,118 @@ def _patch_line(line: str, lfmax: float, slavr: float, sizlf: float) -> str:
 def read_cul_param(var_id: str) -> tuple[float, float, float]:
     for line in CUL.read_text().splitlines():
         if re.match(rf"^{var_id}\s", line):
-            return (float(line[79:85]), float(line[85:91]), float(line[91:97]))
+            return (float(line[LFMAX_COL]), float(line[SLAVR_COL]), float(line[SIZLF_COL]))
     raise RuntimeError(f"{var_id} not found in {CUL}")
 
 
 def update_cul(var_id: str, lfmax: float, slavr: float, sizlf: float) -> None:
     lines = CUL.read_text().splitlines()
-    out = []
+    out, found = [], False
     for line in lines:
         if re.match(rf"^{var_id}\s", line):
             out.append(_patch_line(line, lfmax, slavr, sizlf))
+            found = True
         else:
             out.append(line)
+    if not found:
+        raise RuntimeError(f"{var_id} not found in {CUL}")
     CUL.write_text("\n".join(out) + "\n")
 
 
-# ---------------------------------------------------------------------------
-# Run model (mode C = single treatment; mode A ignores the treatment number)
-# ---------------------------------------------------------------------------
+def run_and_get_cwam(preamble: str, batch_line: str) -> float:
+    """Run one treatment (via a throwaway 1-data-line batch, mode B) and
+    return its simulated CWAM (kg/ha) from Evaluate.OUT.
 
-def run_treatment() -> None:
-    subprocess.run(
-        [str(MODEL), "C", FILEX, TRTNO],
-        check=True, cwd=LETTUCE, capture_output=True,
+    write_bytes (not write_text) is deliberate: DSSBatch_OPT.v48 is LF-only
+    and dscsm048.exe's batch parser fails ("Error in the format of the
+    batch file") on the CRLF that Path.write_text() introduces via
+    Windows' universal-newline translation.
+
+    Passing the batch file as a bare relative filename (with cwd=LETTUCE)
+    is deliberate, not cosmetic: dscsm048.exe reproducibly misparses an
+    absolute-path filename argument -- its own error message prints the
+    filename truncated ("_calib_tmp." with ".v48" cut off), which is why
+    it always reported "Error in the format of the batch file" even for
+    byte-identical, correctly-formatted content. Every other working
+    invocation in this project (DSSBatch_OPT.v48 etc.) already used a bare
+    relative filename; this just matches that convention."""
+    TMP_BATCH.write_bytes((preamble + batch_line + "\n").encode("utf-8"))
+    result = subprocess.run(
+        [str(MODEL), "CRGRO048", "B", TMP_BATCH.name],
+        cwd=LETTUCE, capture_output=True,
     )
+    if result.returncode != 0:
+        raise subprocess.CalledProcessError(
+            result.returncode, result.args, output=result.stdout, stderr=result.stderr)
+    data_lines = [l for l in EVALUATE.read_text().splitlines()
+                  if re.match(r"^\s*\d+\s+\S+\s+\d+", l)]
+    if not data_lines:
+        raise RuntimeError("No data row found in Evaluate.OUT after run")
+    parts = data_lines[-1].split()
+    return float(parts[27])  # CWAMS (simulated), 0-indexed == awk $28
 
 
-def parse_cwad_by_dap() -> dict[int, float]:
-    """Parse PlantGro.OUT, return {DAP: CWAD} for the most recent run."""
-    result: dict[int, float] = {}
-    for line in PLANTGRO.read_text().splitlines():
-        if not re.match(r"^\s*\d{4}\s+\d{3}\s+\d+\s+\d+", line):
-            continue
-        parts = line.split()
-        dap = int(parts[3])
-        cwad = float(parts[12])
-        result[dap] = cwad
-    return result
-
-
-TARGET_DAT = 32  # the actual harvest day — what "1936 kg/ha" refers to
-
-
-def nrmse_vs_obs() -> tuple[float, dict[int, float]]:
-    """Objective = %% error at TARGET_DAT (final/harvest biomass) only.
-    Per-point errors for the rest of the DAT14-32 curve are still computed
-    and reported for visibility, but do not affect the search — the goal
-    here is matching final biomass, not whole-curve shape (CUL params can't
-    fix the curve-shape mismatch anyway; see module docstring)."""
-    sim = parse_cwad_by_dap()
-    per_point = {}
-    for dat, obs in OBS_CWAM.items():
-        s = sim.get(dat)
-        if s is None:
-            eligible = [d for d in sim if d <= dat]
-            s = sim[max(eligible)] if eligible else 0.0
-        per_point[dat] = 100.0 * abs(s - obs) / obs
-    return per_point[TARGET_DAT], per_point
-
-
-# ---------------------------------------------------------------------------
-# Calibration — joint LFMAX x SLAVR coarse grid, then fine-tune
-# ---------------------------------------------------------------------------
-
-def _try(lf: float, sl: float, sz: float, best: dict | None, label: str,
-         quiet: bool = False) -> dict:
-    update_cul(VAR_ID, lf, sl, sz)
-    run_treatment()
-    mape, per_point = nrmse_vs_obs()
-    is_new_best = best is None or mape < best["mape"]
-    if not quiet or is_new_best:
-        tag = " *** NEW BEST ***" if (quiet and is_new_best and best is not None) else ""
-        print(f"  {label}LFMAX={lf:.3f}  SLAVR={sl:6.1f}  SIZLF={sz:5.1f}  "
-              f"MAPE={mape:6.1f}%  DAT32err={per_point[32]:5.1f}%{tag}")
+def _try(preamble: str, batch_line: str, obs: float, lf: float, sl: float, sz: float,
+         best: dict | None, var_id: str, label: str) -> dict:
+    update_cul(var_id, lf, sl, sz)
+    sim = run_and_get_cwam(preamble, batch_line)
+    err = 100.0 * abs(sim - obs) / obs
+    is_new_best = best is None or err < best["err"]
+    tag = " *** NEW BEST ***" if is_new_best and best is not None else ""
+    print(f"  {label}LFMAX={lf:.3f}  SLAVR={sl:6.1f}  sim={sim:7.1f}  "
+          f"obs={obs:7.1f}  err={err:5.1f}%{tag}")
     if is_new_best:
-        return {"lfmax": lf, "slavr": sl, "sizlf": sz, "mape": mape, "per_point": per_point}
+        return {"lfmax": lf, "slavr": sl, "sizlf": sz, "sim": sim, "err": err}
     return best
 
 
-def calibrate() -> dict:
-    _, _, start_sizlf = read_cul_param(VAR_ID)
-    best: dict | None = None
+def calibrate_one(label: str, var_id: str, obs: float, preamble: str, batch_line: str,
+                   bounds: dict[str, float]) -> dict:
+    _, _, start_sz = read_cul_param(var_id)
+    lf_lo, lf_hi = bounds["lfmax_min"], bounds["lfmax_max"]
+    sl_lo, sl_hi = bounds["slavr_min"], bounds["slavr_max"]
 
-    print(f"=== {VAR_ID}: joint LFMAX x SLAVR coarse grid (SIZLF fixed={start_sizlf}) ===")
-    for lf in LFMAX_GRID:
-        for sl in SLAVR_GRID:
-            best = _try(lf, sl, start_sizlf, best, "")
+    print(f"\n=== {label} ({var_id}): obs={obs} kg/ha  "
+          f"bounds LFMAX[{lf_lo},{lf_hi}] SLAVR[{sl_lo},{sl_hi}] ===")
+
+    lf_grid = [round(lf_lo + i * (lf_hi - lf_lo) / (LFMAX_STEPS - 1), 3)
+               for i in range(LFMAX_STEPS)]
+    sl_grid = [round(sl_lo + i * (sl_hi - sl_lo) / (SLAVR_STEPS - 1), 1)
+               for i in range(SLAVR_STEPS)]
+
+    best: dict | None = None
+    for lf in lf_grid:
+        for sl in sl_grid:
+            best = _try(preamble, batch_line, obs, lf, sl, start_sz, best, var_id, "coarse ")
 
     cur_lf, cur_sl = best["lfmax"], best["slavr"]
-    print(f"\n=== {VAR_ID}: SIZLF coarse grid (LFMAX={cur_lf:.2f} SLAVR={cur_sl}) ===")
-    for sz in SIZLF_GRID:
-        best = _try(cur_lf, cur_sl, sz, best, "")
-    cur_sz = best["sizlf"]
+    for _ in range(FINE_PASSES):
+        improved = False
+        for dlf in (-1, 1):
+            lf = round(cur_lf + dlf * FINE_LFMAX_STEP, 3)
+            if not (lf_lo <= lf <= lf_hi):
+                continue
+            nb = _try(preamble, batch_line, obs, lf, cur_sl, start_sz, best, var_id, "fine   ")
+            if nb is not best:
+                best, improved = nb, True
+        for dsl in (-1, 1):
+            sl = round(cur_sl + dsl * FINE_SLAVR_STEP, 1)
+            if not (sl_lo <= sl <= sl_hi):
+                continue
+            nb = _try(preamble, batch_line, obs, cur_lf, sl, start_sz, best, var_id, "fine   ")
+            if nb is not best:
+                best, improved = nb, True
+        cur_lf, cur_sl = best["lfmax"], best["slavr"]
+        if not improved:
+            break
 
-    print(f"\n=== {VAR_ID}: joint fine-tune (LFMAX~{cur_lf:.2f} SLAVR~{cur_sl} SIZLF~{cur_sz}) ===")
-    for dlf in (-2, -1, 1, 2):
-        lf = round(cur_lf + dlf * LFMAX_FINE_STEP, 3)
-        if lf <= 0 or lf > LFMAX_MAX:  # respect CUL MAXIMA bound
-            continue
-        best = _try(lf, cur_sl, cur_sz, best, "")
-    cur_lf = best["lfmax"]
-
-    for dsl in (-2, -1, 1, 2):
-        sl = cur_sl + dsl * SLAVR_FINE_STEP
-        if sl < 100:
-            continue
-        best = _try(cur_lf, sl, cur_sz, best, "")
-    cur_sl = best["slavr"]
-
-    for dsz in (-2, -1, 1, 2):
-        sz = cur_sz + dsz * SIZLF_FINE_STEP
-        if not (250 <= sz <= 600):
-            continue
-        best = _try(cur_lf, cur_sl, sz, best, "")
-
-    print(f"\n>>> Best: LFMAX={best['lfmax']:.3f}  SLAVR={best['slavr']}  "
-          f"SIZLF={best['sizlf']}  MAPE={best['mape']:.1f}%")
-    return best
-
-
-# ---------------------------------------------------------------------------
-# Monte Carlo search — dense random coverage of the bounded LFMAX x SLAVR x
-# SIZLF space, targeting DAT32 (final biomass) match. Bounds match the CUL
-# file's own stated MAXIMA/MINIMA (LFMAX<=1.60; SIZLF in [250,600]) plus the
-# SPE-cited genus extremes for SLAVR ([310,910], Lorenz & Wiebe 1980).
-# ---------------------------------------------------------------------------
-
-MC_LFMAX_RANGE = (1.20, 1.60)
-MC_SLAVR_RANGE = (310, 910)
-MC_SIZLF_RANGE = (250, 600)
-
-
-def calibrate_monte_carlo(n_runs: int, seed: int = 42) -> dict:
-    import random
-    import time
-    rng = random.Random(seed)
-    best: dict | None = None
-    t0 = time.time()
-
-    print(f"=== {VAR_ID}: Monte Carlo search, {n_runs} runs ===")
-    print(f"  LFMAX in {MC_LFMAX_RANGE}  SLAVR in {MC_SLAVR_RANGE}  SIZLF in {MC_SIZLF_RANGE}")
-    for i in range(n_runs):
-        lf = round(rng.uniform(*MC_LFMAX_RANGE), 3)
-        sl = round(rng.uniform(*MC_SLAVR_RANGE), 1)
-        sz = round(rng.uniform(*MC_SIZLF_RANGE), 1)
-        label = f"[{i + 1}/{n_runs}] "
-        best = _try(lf, sl, sz, best, label, quiet=True)
-        if (i + 1) % 500 == 0:
-            elapsed = time.time() - t0
-            rate = (i + 1) / elapsed
-            eta = (n_runs - i - 1) / rate
-            print(f"  ... {i + 1}/{n_runs} done, {elapsed:.0f}s elapsed, "
-                  f"~{eta:.0f}s remaining, current best MAPE={best['mape']:.2f}%")
-
-    print(f"\n>>> Monte Carlo best: LFMAX={best['lfmax']:.3f}  SLAVR={best['slavr']}  "
-          f"SIZLF={best['sizlf']}  MAPE={best['mape']:.2f}%")
+    best["sizlf"] = start_sz
+    # _try() leaves the CUL file at whatever combination it last probed,
+    # which is not necessarily the best one found -- re-apply the winner
+    # explicitly so the file on disk always matches what's reported.
+    update_cul(var_id, best["lfmax"], best["slavr"], best["sizlf"])
+    print(f">>> {label} best: LFMAX={best['lfmax']:.3f}  SLAVR={best['slavr']}  "
+          f"SIZLF={start_sz}  sim={best['sim']:.1f}  obs={obs}  err={best['err']:.1f}%")
     return best
 
 
@@ -293,35 +248,32 @@ def main() -> None:
     shutil.copy2(CUL, backup)
     print(f"Backup: {backup}")
 
-    orig = read_cul_param(VAR_ID)
-    print(f"Starting params for {VAR_ID}: LFMAX={orig[0]} SLAVR={orig[1]} SIZLF={orig[2]}\n")
+    bounds = read_bounds()
+    print("Bounds from CUL MINIMA/MAXIMA rows:", bounds)
 
-    mc_runs = None
-    if len(sys.argv) > 1 and sys.argv[1] == "--monte-carlo":
-        mc_runs = int(sys.argv[2]) if len(sys.argv) > 2 else 10000
+    preamble, batch_lines = read_opt_batch_template()
+    only = sys.argv[1] if len(sys.argv) > 1 else None
 
+    results: dict[str, dict] = {}
     try:
-        best = calibrate_monte_carlo(mc_runs) if mc_runs else calibrate()
-        update_cul(VAR_ID, best["lfmax"], best["slavr"], best["sizlf"])
-        run_treatment()
-        final_nrmse, final_points = nrmse_vs_obs()
+        for (label, var_id, obs), batch_line in zip(TREATMENT_INFO, batch_lines):
+            if only and label.lower() != only.lower():
+                continue
+            results[label] = calibrate_one(label, var_id, obs, preamble, batch_line, bounds)
 
-        print("\n*** CUL updated ***")
-        print(f"  {VAR_ID}: LFMAX={best['lfmax']:.3f}  SLAVR={best['slavr']}  SIZLF={best['sizlf']}")
-        print(f"  Final NRMSE: {final_nrmse:.1f}%")
-        print("  Per-point %% error:  " + "  ".join(
-            f"DAT{d}={e:.1f}%" for d, e in sorted(final_points.items())))
+        print("\n=== FINAL SUMMARY ===")
+        for label, r in results.items():
+            print(f"  {label:12s} LFMAX={r['lfmax']:.3f}  SLAVR={r['slavr']:6.1f}  "
+                  f"SIZLF={r['sizlf']:6.1f}  sim={r['sim']:7.1f}  err={r['err']:5.1f}%")
 
-        print("\n" + json.dumps({
-            VAR_ID: {"lfmax": best["lfmax"], "slavr": best["slavr"],
-                     "sizlf": best["sizlf"], "nrmse": final_nrmse,
-                     "per_point_pct_error": final_points},
-        }, indent=2))
+        print("\n" + json.dumps(results, indent=2))
 
     except Exception:
         shutil.copy2(backup, CUL)
-        print("ERROR — CUL restored from backup")
+        print("ERROR - CUL restored from backup")
         raise
+    finally:
+        TMP_BATCH.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
