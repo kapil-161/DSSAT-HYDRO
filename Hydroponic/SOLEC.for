@@ -119,15 +119,18 @@ C       doi:10.1111/j.1365-2389.2010.01284.x
       REAL, PARAMETER :: LAMBDA_NH4 = 0.0734
       REAL, PARAMETER :: LAMBDA_P   = 0.0330
       REAL, PARAMETER :: LAMBDA_K   = 0.0735
-C     Ca2+: 0.0595, Mg2+: 0.0530, SO42-: 0.0800
+C     Ca2+: 0.1190, Mg2+: 0.1061, SO42-: 0.1600
+C     Molar (not per-charge equivalent) conductivity, since ci is in mmol/L.
+C     Corrected 2026-08-07 from prior per-charge values (0.0595/0.0530/0.0800)
+C     which undercounted divalent EC by half; matches Chapter 3 Table 5.
 C     Source: CRC Handbook of Chemistry and Physics (Haynes, 2014, 95th ed.)
       REAL, PARAMETER :: MW_CA      = 40.078
       REAL, PARAMETER :: MW_MG      = 24.305
       REAL, PARAMETER :: MW_S       = 32.06    ! elemental S, stored as S in LUX
       REAL, PARAMETER :: MW_SO4     = 96.06
-      REAL, PARAMETER :: LAMBDA_CA  = 0.0595
-      REAL, PARAMETER :: LAMBDA_MG  = 0.0530
-      REAL, PARAMETER :: LAMBDA_SO4 = 0.0800
+      REAL, PARAMETER :: LAMBDA_CA  = 0.1190
+      REAL, PARAMETER :: LAMBDA_MG  = 0.1061
+      REAL, PARAMETER :: LAMBDA_SO4 = 0.1600
 
 C     File reading for SPE parameters
       CHARACTER*30 FILEIO_LOC

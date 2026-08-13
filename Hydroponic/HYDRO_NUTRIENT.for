@@ -2,6 +2,16 @@ C=======================================================================
 C  HYDRO_NUTRIENT - Hydroponic N uptake: Haldane kinetics with Cmin
 C  plus shared total inorganic N inhibition.
 C-----------------------------------------------------------------------
+C  Attribution:
+C    Michaelis-Menten baseline (Jmax, Km, Cmin) and the NO3 induction
+C    term (1 + 0.21*C_NO3) are from Silberbush, Ben-Asher & Ephrath
+C    (2005), Plant and Soil 271:309-319 (Table 1, Eq. 13a).
+C    The substrate self-inhibition term (C**2/Ki) uses the Andrews
+C    (1968) inhibitory-substrate form, Biotechnology and Bioengineering
+C    10:707-723.  The Ki VALUES (KI_NO3, KI_NH4, KI_TIN) are NOT from
+C    either paper; no published lettuce Ki exists, so they are
+C    calibrated in this model.
+C-----------------------------------------------------------------------
 C  Called from: NUPTAK
 C=======================================================================
 
