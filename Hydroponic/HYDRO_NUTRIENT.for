@@ -1,6 +1,5 @@
 C=======================================================================
-C  HYDRO_NUTRIENT - Hydroponic N uptake: Haldane kinetics with Cmin
-C  plus shared total inorganic N inhibition.
+C  HYDRO_NUTRIENT - Hydroponic N uptake: Haldane kinetics with Cmin.
 C-----------------------------------------------------------------------
 C  Attribution:
 C    Michaelis-Menten baseline (Jmax, Km, Cmin) and the NO3 induction
@@ -8,9 +7,21 @@ C    term (1 + 0.21*C_NO3) are from Silberbush, Ben-Asher & Ephrath
 C    (2005), Plant and Soil 271:309-319 (Table 1, Eq. 13a).
 C    The substrate self-inhibition term (C**2/Ki) uses the Andrews
 C    (1968) inhibitory-substrate form, Biotechnology and Bioengineering
-C    10:707-723.  The Ki VALUES (KI_NO3, KI_NH4, KI_TIN) are NOT from
+C    10:707-723.  The Ki VALUES (KI_NO3, KI_NH4) are NOT from
 C    either paper; no published lettuce Ki exists, so they are
 C    calibrated in this model.
+C
+C    2026-08-17: removed the shared TIN (total inorganic N) inhibition
+C    term (formerly KI_TIN/TIN_INHIB). It multiplied both NO3 and NH4
+C    uptake by a single combined-concentration Haldane term. At this
+C    model's operating concentrations it was numerically inert
+C    (KI_TIN=99999 gave TIN_INHIB~0.999), and a parameter sweep of
+C    KI_NH4 from 20 down to 0.1 (a 200x range) failed to reproduce the
+C    observed peak-then-crash pattern in GTGA2401 (Sharkey et al. 2024)
+C    at the highest N treatment -- confirming the mechanism had no
+C    calibratable value that did useful work. Removed rather than left
+C    inert. See NH4_TOX below for the mechanism that does reproduce
+C    that crash.
 C-----------------------------------------------------------------------
 C  Called from: NUPTAK
 C=======================================================================
@@ -36,7 +47,7 @@ C=======================================================================
       REAL NO3_SOL, NH4_SOL
 
       REAL JMAX_NO3, KM_NO3, JMAX_NH4, KM_NH4
-      REAL KI_NO3, KI_NH4, KI_TIN
+      REAL KI_NO3, KI_NH4
       REAL NH4_TOX_K, NH4_TOX_N
       REAL UN_TOTAL, SCALE
       REAL UNO3_ACT, UNH4_ACT
@@ -47,7 +58,6 @@ C=======================================================================
       REAL ECSTRESS_JMAX_NO3, ECSTRESS_JMAX_NH4, ECSTRESS_KM_NO3
       REAL JMAX_EFF_NO3, KM_EFF_NO3, JMAX_EFF_NH4, KM_EFF_NH4
       REAL CMIN_NO3, CMIN_NH4, C_NO3_EFF, C_NH4_EFF
-      REAL C_TIN_EFF, KM_TIN_EFF, TIN_INHIB
       REAL INDUCT_NO3   ! NO3 J_max induction factor: (1 + 0.21*C_NO3_mol_m3)
       REAL NTOXS        ! NH4 toxicity stress factor (0-1)
 
@@ -56,7 +66,7 @@ C=======================================================================
       CHARACTER*80 C80
       INTEGER DYNAMIC
 
-      SAVE JMAX_NO3, KM_NO3, JMAX_NH4, KM_NH4, KI_NO3, KI_NH4, KI_TIN
+      SAVE JMAX_NO3, KM_NO3, JMAX_NH4, KM_NH4, KI_NO3, KI_NH4
       SAVE NH4_TOX_K, NH4_TOX_N
 
 C     Silberbush et al. (2005) Cmin values converted to mg/L of nutrient.
@@ -78,14 +88,13 @@ C     Table units are mol/m3, numerically equal to mmol/L.
         IF (FOUND .EQ. 0) CALL ERROR('HYDNUT',42,FILECC,0)
         CALL IGNORE(LUNCRP, LINC, ISECT, C80)
         READ(C80,*,IOSTAT=ERR) JMAX_NO3, KM_NO3, JMAX_NH4, KM_NH4,
-     &                         KI_NO3, KI_NH4, KI_TIN
+     &                         KI_NO3, KI_NH4
         IF (ERR .NE. 0) CALL ERROR('HYDNUT',ERR,FILECC,0)
         CALL IGNORE(LUNCRP, LINC, ISECT, C80)
         READ(C80,*,IOSTAT=ERR) NH4_TOX_K, NH4_TOX_N
         IF (ERR .NE. 0) CALL ERROR('HYDNUT',ERR,FILECC,0)
         IF (KI_NO3    .LE. 1.E-6) KI_NO3    = 1.E6
         IF (KI_NH4    .LE. 1.E-6) KI_NH4    = 1.E6
-        IF (KI_TIN    .LE. 1.E-6) KI_TIN    = 1.E6
         IF (NH4_TOX_K .LE. 1.E-6) NH4_TOX_K = 1.E6
         IF (NH4_TOX_N .LE. 1.E-6) NH4_TOX_N = 1.0
 
@@ -100,15 +109,14 @@ C     Table units are mol/m3, numerically equal to mmol/L.
         CALL PUT('HYDRO','UNH4_POT',UNH4_POT)
 
         WRITE(*,100) JMAX_NO3, KM_NO3, JMAX_NH4, KM_NH4,
-     &               KI_NO3, KI_NH4, KI_TIN, NH4_TOX_K, NH4_TOX_N
- 100    FORMAT(/,' Hydroponic N Module (Haldane with Cmin + TIN inhibition)',
+     &               KI_NO3, KI_NH4, NH4_TOX_K, NH4_TOX_N
+ 100    FORMAT(/,' Hydroponic N Module (Haldane with Cmin)',
      &         /,'   Jmax_NO3: ',F6.3,' mg/cm/d  Km_NO3: ',F5.1,
      &            ' mg/L',
      &         /,'   Jmax_NH4: ',F6.3,' mg/cm/d  Km_NH4: ',F5.1,
      &            ' mg/L',
      &         /,'   Ki_NO3  : ',F7.1,' mg/L     Ki_NH4 : ',F7.1,
      &            ' mg/L',
-     &         /,'   Ki_TIN  : ',F7.1,' mg/L total inorganic N',
      &         /,'   NH4_TOX_K:',F7.2,' mg/L     NH4_TOX_N:',F5.2,
      &            ' (Hill coeff)',/)
 
@@ -154,17 +162,12 @@ C       concentration Cmin; transpiration affects reservoir concentration
 C       through HYDRO_WATER, not as direct uptake.
         C_NO3_EFF = MAX(0.0, NO3_SOL - CMIN_NO3)
         C_NH4_EFF = MAX(0.0, NH4_SOL - CMIN_NH4)
-        C_TIN_EFF = C_NO3_EFF + C_NH4_EFF
-        KM_TIN_EFF = KM_EFF_NO3 + KM_EFF_NH4
-        TIN_INHIB = (KM_TIN_EFF + C_TIN_EFF) /
-     &              (KM_TIN_EFF + C_TIN_EFF +
-     &               C_TIN_EFF*C_TIN_EFF/KI_TIN)
         UNO3_ACT = JMAX_EFF_NO3 * C_NO3_EFF /
      &           (KM_EFF_NO3 + C_NO3_EFF + C_NO3_EFF*C_NO3_EFF/KI_NO3)
-     &           * TRLV * 100.0 * PH_AVAIL_NO3 * O2_STRESS * TIN_INHIB
+     &           * TRLV * 100.0 * PH_AVAIL_NO3 * O2_STRESS
         UNH4_ACT = JMAX_EFF_NH4 * C_NH4_EFF /
      &           (KM_EFF_NH4 + C_NH4_EFF + C_NH4_EFF*C_NH4_EFF/KI_NH4)
-     &           * TRLV * 100.0 * PH_AVAIL_NH4 * O2_STRESS * TIN_INHIB
+     &           * TRLV * 100.0 * PH_AVAIL_NH4 * O2_STRESS
 
         UNO3 = UNO3_ACT
         UNH4 = UNH4_ACT
@@ -194,6 +197,45 @@ C       Cap at 1.0x demand
         UNH4 = MAX(0.0, UNH4)
 
 C       NH4 toxicity stress: NTOXS = 1 / (1 + (NH4_SOL/NH4_TOX_K)^NH4_TOX_N)
+C
+C       Attribution (verified 2026-08-17; DOIs checked against
+C       publisher/CrossRef records on this date, not from memory):
+C         Equation FORM (Hill function) -- Hill, A.V. (1910) "The
+C         possible effects of the aggregation of the molecules of
+C         haemoglobin on its dissociation curves." J. Physiol. 40:iv-vii
+C         -- Proceedings of the Physiological Society note, predates
+C         DOI assignment; NO DOI EXISTS for this citation (not an
+C         omission -- 1910 proceedings notes were never assigned one).
+C         Ritz, C. (2010) "Toward a unified approach to dose-response
+C         modeling in ecotoxicology." Environ. Toxicol. Chem.
+C         29(1):220-229, doi:10.1002/etc.7 (precedent for applying the
+C         Hill form to a toxicant dose-response, not just ligand
+C         binding).
+C         Parameter VALUES (NH4_TOX_K=138 mg/L, NH4_TOX_N=2) -- NOT
+C         LITERATURE-SOURCED. Checked and ruled out: Silberbush et al.
+C         (2005, doi:10.1007/s11104-004-3093-z) -- no NH4 toxicity term
+C         at all; Sonneveld & Voogt (2009) "Plant Nutrition of
+C         Greenhouse Crops," doi:10.1007/978-90-481-2532-6 -- discusses
+C         NH4 toxicity thresholds (citing Ingestad 1972/73 Plant
+C         Physiol. 52(4):332-338, doi:10.1104/pp.52.4.332 -- published
+C         Oct 1973 despite being cited as "1972" throughout this chain;
+C         Ikeda & Osawa 1983 J. Jpn. Soc. Hort. Sci. 52(2):159-166,
+C         doi:10.2503/jjshs.52.159; Feigin et al. 1984 Proc. 6th Int.
+C         Congr. Soilless Culture 207-214 -- conference proceedings,
+C         NO DOI; Barker & Mills 1980 Hort. Rev. 2:395-423,
+C         doi:10.1002/9781118060759.ch8) but gives no fitted equation;
+C         Hoque, Ajwa & Smith (2007) Commun. Soil Sci. Plant Anal.
+C         39:207-216, doi:10.1080/00103620701759194 (lettuce,
+C         hydroponic) tested NH4 at only ONE concentration (50 mg/L),
+C         no dose-response series, so cannot be the source; Ingestad
+C         (1972/73) and Ikeda & Osawa (1983) (both obtained and read
+C         full-text, DOIs above) are NH4:NO3 ratio studies, qualitative,
+C         no fitted curve; Shi et al. (2020) Plants 9(4):501,
+C         doi:10.3390/plants9040501 (Arabidopsis, CIPK23) reports
+C         generic literature toxicity onset "5-10 mM NH4+" (~70-140 mg
+C         N/L),
+C         consistent with 138 mg/L in order of magnitude only -- not a
+C         source. Treat NH4_TOX_K/N as this model's own calibration.
         NTOXS = 1.0 / (1.0 + (MAX(0.0,NH4_SOL)/NH4_TOX_K)**NH4_TOX_N)
         NTOXS = MAX(0.0, MIN(1.0, NTOXS))
 
@@ -232,17 +274,12 @@ C       state after HYDRO_WATER has updated reservoir volume.
 
         C_NO3_EFF = MAX(0.0, NO3_SOL - CMIN_NO3)
         C_NH4_EFF = MAX(0.0, NH4_SOL - CMIN_NH4)
-        C_TIN_EFF = C_NO3_EFF + C_NH4_EFF
-        KM_TIN_EFF = KM_EFF_NO3 + KM_EFF_NH4
-        TIN_INHIB = (KM_TIN_EFF + C_TIN_EFF) /
-     &              (KM_TIN_EFF + C_TIN_EFF +
-     &               C_TIN_EFF*C_TIN_EFF/KI_TIN)
         UNO3 = JMAX_EFF_NO3 * C_NO3_EFF /
      &       (KM_EFF_NO3 + C_NO3_EFF + C_NO3_EFF*C_NO3_EFF/KI_NO3)
-     &       * TRLV * 100.0 * PH_AVAIL_NO3 * O2_STRESS * TIN_INHIB
+     &       * TRLV * 100.0 * PH_AVAIL_NO3 * O2_STRESS
         UNH4 = JMAX_EFF_NH4 * C_NH4_EFF /
      &       (KM_EFF_NH4 + C_NH4_EFF + C_NH4_EFF*C_NH4_EFF/KI_NH4)
-     &       * TRLV * 100.0 * PH_AVAIL_NH4 * O2_STRESS * TIN_INHIB
+     &       * TRLV * 100.0 * PH_AVAIL_NH4 * O2_STRESS
 
 C       Potential (uncapped) kinetic supply - diagnostic only, not used
 C       in any flux. This is the INTEGR-pass value and is what the
@@ -269,6 +306,9 @@ C       Re-apply demand cap (ANDEM is the current-day value from NUPTAK)
         UNH4 = MAX(0.0, UNH4)
 
 C       NH4 toxicity stress: NTOXS = 1 / (1 + (NH4_SOL/NH4_TOX_K)^NH4_TOX_N)
+C       Attribution: see RATE-section NTOXS calculation above (~L196)
+C       for full citation trail (Hill 1910; Ritz 2010 for form; values
+C       uncredited, verified 2026-08-17).
         NTOXS = 1.0 / (1.0 + (MAX(0.0,NH4_SOL)/NH4_TOX_K)**NH4_TOX_N)
         NTOXS = MAX(0.0, MIN(1.0, NTOXS))
 

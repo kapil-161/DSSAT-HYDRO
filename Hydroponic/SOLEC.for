@@ -78,6 +78,55 @@ C     EC Stress factors (0.0 to 1.0, where 1.0 = no stress)
       REAL ECSTRESS_TRANSP    ! Stress factor for transpiration (osmotic, high EC only)
 
 C     EC Stress parameters for Na-based stress (high EC) — read from SPE
+C
+C     Attribution (verified 2026-08-17; DOIs checked against publisher/
+C     CrossRef records on this date, not from memory):
+C       C_NA0_5    -- CONFIRMED. Silberbush, Ben-Asher & Ephrath (2005)
+C                     Plant Soil 271:309-319, Eq. 10b. doi:10.1007/
+C                     s11104-004-3093-z (root-length term only; their
+C                     Ca/SumCations recovery factor is dropped here).
+C                     Eq. 10b itself cites:
+C                       Kafkafi & Bernstein (1996) "Root growth under
+C                       salinity stress," in Plant Roots: The Hidden
+C                       Half (Marcel Dekker) -- book chapter, NO DOI.
+C                       Kinraide (1999) J. Exp. Bot. 50:1495-1505.
+C                       doi:10.1093/jxb/50.338.1495
+C                       Howard & Adams (1965) Soil Sci. Soc. Am. Proc.
+C                       29:558-562 (Ca-ratio term).
+C                       doi:10.2136/sssaj1965.03615995002900050025x
+C       K_INHIB_NO3 -- CONFIRMED. Massa, D., Mattson, N.S., Lieth, J.H.
+C                     (2009) Plant and Soil 318:101-115, Eq. 3/6/9.
+C                     doi:10.1007/s11104-008-9821-z (non-competitive
+C                     NaCl inhibition of NO3 Jmax, I=Imax/(1+[NaCl]/Ki)).
+C                     Their fitted Ki=39.73 mol/m3 (rose, NaCl); this
+C                     file's value is 50.0 mol/m3 (lettuce, Na only) --
+C                     same form, same order of magnitude, different
+C                     species/inhibitor.
+C       K_INHIB_K   -- CONFIRMED. Silberbush et al. 2005 (doi above),
+C                     Table 1: Jmax_K = 5.12e-8*exp(-0.023*C_Na) --
+C                     exact coefficient match (0.023). Table 1
+C                     attributes this to:
+C                       Wild, A., Woodhouse, P.J., Hopper, M.J. (1979)
+C                       J. Exp. Bot. 30:697-704. doi:10.1093/jxb/
+C                       30.4.697 (Silberbush's own reference list has
+C                       this author as "Harper" -- likely an OCR/typo
+C                       error; CrossRef confirms "Hopper").
+C                       Silberbush & Ben-Asher (1989) Sci. Hortic.
+C                       39:279-287. doi:10.1016/0304-4238(89)90121-0
+C       K_INHIB_P   -- CONFIRMED. Silberbush et al. 2005 (doi above),
+C                     Table 1: Jmax_P = 1.06e-8*exp(-0.0022*C_Na) --
+C                     exact coefficient match (0.0022). Table 1
+C                     attributes this to:
+C                       Barber, S.A. (1995) Soil Nutrient
+C                       Bioavailability, 2nd ed., Wiley -- book, NO DOI.
+C                       Martinez, V., Lauchli, A. (1994) New Phytol.
+C                       125:609-614. doi:10.1111/j.1469-8137.1994.
+C                       tb02955.x
+C     NOTE: ECSTRESS_JMAX_NH4 below is hardcoded equal to
+C     ECSTRESS_JMAX_NO3 ("NH4: Similar to NO3") -- Silberbush's own
+C     model gives NH4 a distinct linear term (1-0.02*C_Na), not this
+C     reused hyperbolic curve. Not literature-matched; a simplification
+C     made in this code, not in any cited source.
       REAL C_NA0_5       ! Na concentration at 50% growth reduction (mol/m3)
       REAL K_INHIB_NO3  ! Inhibition constant for NO3 (from NaCl studies)
       REAL K_INHIB_K    ! Inhibition constant for K (exponential decay)
@@ -91,6 +140,21 @@ C     EC Stress parameters for EC-based stress (high AND low)
       REAL EC_STRESS_TOTAL ! Combined EC stress factor (0-1)
 
 C     EC threshold absolutes and stress curve params — read from SPE
+C
+C     Attribution (verified 2026-08-17): NOT LITERATURE-SOURCED.
+C     No equation found for EC_ABS_LOW/HIGH, EC_STRESS_MIN/SLP, or
+C     EC_DECAY_K (linear-low / exponential-high EC stress curve) after
+C     full-text checks of Silberbush et al. (2005) -- no aggregate-EC
+C     stress function, only individual Na/Cl ion terms -- and Sonneveld
+C     & Voogt (2009) "Plant Nutrition of Greenhouse Crops" -- gives only
+C     an empirical EC-vs-relative-yield table (their Table 6.2, tomato),
+C     no fitted curve. Maas, E.V., Hoffman, G.J. (1977) "Crop salt
+C     tolerance--current assessment," J. Irrig. Drain. Div. 103:115-134,
+C     doi:10.1061/JRCEA4.0001137, is the closest published analog (crop
+C     salinity response vs EC) but is a different functional form
+C     (plateau + linear threshold-slope, not linear-low/exponential-
+C     high) and not a numeric match. Treat as this model's own
+C     calibration until a source turns up.
       REAL EC_ABS_LOW    ! Absolute lower bound of optimal EC range (dS/m)
       REAL EC_ABS_HIGH   ! Absolute upper bound of optimal EC range (dS/m)
       REAL EC_STRESS_MIN ! Minimum stress factor at EC=0 (low-EC curve)

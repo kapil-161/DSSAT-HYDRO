@@ -109,6 +109,16 @@ C     CO2_AQ = KH_CO2 * pCO2 = 3.4e-2 * 370e-6 = 1.258e-5 mol/L
       PARAMETER (CO2_AQ = 1.258E-5)  ! KH * pCO2 (mol/L)
 
 C     Background alkalinity; pH scale/Km factors — read from SPE at RUNINIT
+C
+C     Attribution (verified 2026-08-17): BGALKAL is NOT LITERATURE-
+C     SOURCED. Silberbush et al. (2005) Eq. 14a/14c supply the CO2-
+C     equilibrium/HCO3- charge-balance framework this buffer capacity
+C     sits in (see BUFFER_CAP below), but his system has no irrigation-
+C     water background-alkalinity term -- this appears to be this
+C     model's own addition, calibrated (comment below: "~0.5 mol H+/pH
+C     for a 72 L solution"). No source found in Silberbush 2005 or
+C     Sonneveld & Voogt (2009) "Plant Nutrition of Greenhouse Crops"
+C     (both checked full-text).
       REAL BGALKAL
 
 C     File reading for SPE parameters
@@ -341,6 +351,49 @@ C       Update pH
 C-----------------------------------------------------------------------
 C       pH-DEPENDENT NUTRIENT AVAILABILITY FACTORS
 C       Gaussian: f(pH) = exp(-(pH - pH_opt)^2 / (2 * scale^2))
+C
+C       Attribution: PH_OPT, PH_SCALE_* and this Gaussian form are NOT
+C       from Silberbush et al. (2005, doi:10.1007/s11104-004-3093-z) --
+C       his model has no pH-dependent uptake-availability term (pH only
+C       appears as a computed output via charge balance, his Eq.
+C       14a-c). Checked and ruled out as a source: Silberbush et al.
+C       2005 (full text); Sonneveld & Voogt (2009) "Plant Nutrition of
+C       Greenhouse Crops," doi:10.1007/978-90-481-2532-6 (full text, no
+C       fitted pH-uptake curve, only empirical EC/NH4 tables); general
+C       web/PubMed search (2026-08-17).
+C
+C       Closest structural precedent found (same codebase, different
+C       process): DSSAT's own CENTURY/CERES soil organic-P routines
+C       use an identical Gaussian-in-pH form for ORGP availability --
+C       see Soil/CENTURY_OrganicMatter/SOMINIT_c.for line ~508 and
+C       Soil/CERES_OrganicMatter/SoilOrg_init.for line ~382:
+C         ORGP(L) = A * EXP(-k*((pH(L)-pH_opt)/scale)**2) * (1-...)
+C       Those routines cite:
+C         Singh, U. (1985) PhD thesis, Univ. of Hawaii -- unpublished
+C         thesis, NO DOI.
+C         Sharpley, A.N. et al. (1984, Table 3, or 1989, Table 4) --
+C         NOT independently verified against the original papers'
+C         actual Table 3/4 content (i.e., I have not confirmed this
+C         Gaussian form appears in either paper -- only that DSSAT's
+C         own code comment cites them for it). Two candidate papers
+C         found via CrossRef search on the cited author/year/topic:
+C           Sharpley, A.N. (1984) "A Simplified Soil and Plant
+C           Phosphorus Model: II. Prediction of Labile, Organic, and
+C           Sorbed Phosphorus." Soil Sci. Soc. Am. J. 48:805-809.
+C           doi:10.2136/sssaj1984.03615995004800040021x -- title/topic
+C           match is strong (organic P predicted from pH + soil
+C           properties) -- MEDIUM-HIGH confidence this is the right
+C           1984 paper, but Table 3 content not directly checked.
+C           Sharpley, A.N. (1989) "Mineralization and Leaching of
+C           Phosphorus from Soil Incubated with Surface-Applied and
+C           Incorporated Crop Residue." J. Environ. Qual. 18:101-105.
+C           doi:10.2134/jeq1989.00472425001800010018x -- plausible but
+C           LOWER confidence match; Table 4 content not checked.
+C       NOT the same variable either way (soil organic P mineralization,
+C       not hydroponic ion-uptake affinity). Offered as a likely
+C       template/inspiration for the functional form, not a confirmed
+C       source for PH_OPT=5.75 or the PH_SCALE_* values, which remain
+C       this model's own calibration.
 C-----------------------------------------------------------------------
         PH_EXP_NO3 = MAX(-10.0,-((PH_CALC-PH_OPT)**2)
      &                          /(2.0*PH_SCALE_NO3**2))
@@ -359,6 +412,13 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C       pH-DEPENDENT Km FACTORS
 C       Km(pH) = Km_opt × exp(alpha × |pH - pH_opt|)
+C
+C       Attribution: PH_KM_ALPHA_* -- no source found anywhere. Checked
+C       Silberbush et al. 2005, Sonneveld & Voogt 2009 (full text), and
+C       general web/PubMed search (2026-08-17); no matching equation or
+C       structural precedent located, including elsewhere in this
+C       codebase. Treat as this model's own calibration until a source
+C       turns up.
 C-----------------------------------------------------------------------
         PH_DEVIATION = ABS(PH_CALC - PH_OPT)
 
