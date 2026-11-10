@@ -8,7 +8,7 @@ C  Revision history
 C
 C  12/22/2025 Created for hydroponic DO2 management
 C-----------------------------------------------------------------------
-C  Called from: SPAM or main hydroponic routine
+C  Called from: HYDROPONICS
 C
 C-----------------------------------------------------------------------
 
@@ -58,6 +58,20 @@ C     Valid for 0-40°C freshwater at 1 atm
       PARAMETER (A2 = -6.642308E7)
       PARAMETER (A3 = 1.243800E10)
       PARAMETER (A4 = -8.621949E11)
+
+C     O2_STRESS half-saturation constant (mg/L). The Michaelis-Menten FORM
+C     is this model's own choice (not literature-sourced; checked and
+C     ruled out as a fit in Chun & Takakura 1994, Environ. Control in
+C     Biol. 32(2):125-135, who found root respiration vs. DO in
+C     hydroponic lettuce follows an EXPONENTIAL relation, R=b2*exp(b3*C),
+C     not a saturating one, over 26-380 umol/L). K_O2 VALUE is grounded
+C     in that same paper: they report 78.2 umol/L (=2.5 mg/L at MW
+C     O2=32 g/mol) as the minimum DO concentration below which root
+C     respiration of lettuce is greatly obstructed (their Fig. 3-4,
+C     Conclusion). Prior value (0.5 mg/L) was uncredited and is
+C     superseded 2026-09-29.
+      REAL K_O2
+      PARAMETER (K_O2 = 2.5)
 
       INTEGER DYNAMIC, YRPLT, YRDOY, DAP, TIMDIF
       SAVE DO2_INIT, SOLVOL, AERATION_RATE, O2_CONSUME, O2_AERATION,
@@ -110,8 +124,10 @@ C       Convert temperature to Kelvin
         DO2_SAT = EXP(LN_DO2)
         IF (DO2_SAT .LT. 5.0) DO2_SAT = 5.0  ! Minimum bound
 
-        O2_STRESS = DO2_CALC / (DO2_CALC + 0.5)
+        O2_STRESS = DO2_CALC / (DO2_CALC + K_O2)
         O2_STRESS = MAX(0.0, MIN(1.0, O2_STRESS))
+C       AUTO_O2=Y: DO2 is held constant, so no O2 stress is applied
+        IF (AUTO_O2_R .GT. 0.5) O2_STRESS = 1.0
 
         CALL PUT('HYDRO','DO2',DO2_CALC)
         CALL PUT('HYDRO','DO2_SAT',DO2_SAT)
@@ -157,11 +173,12 @@ C       O2 addition through aeration
         O2_AERATION = AERATION_RATE * (DO2_SAT - DO2_CALC)
         O2_AERATION = MAX(0.0, O2_AERATION)  ! No negative aeration
 
-C       O2 stress on root function: Michaelis-Menten with Km=2 mg/L
-C       Full function at DO2>4, half at DO2=2, near-zero at DO2<0.5
+C       O2 stress on root function: Michaelis-Menten with K_O2 (see
+C       PARAMETER declaration above for value and attribution).
 C       (Updated in INTEGR after DO2_CALC is refreshed — no PUT here)
-        O2_STRESS = DO2_CALC / (DO2_CALC + 0.5)
+        O2_STRESS = DO2_CALC / (DO2_CALC + K_O2)
         O2_STRESS = MAX(0.0, MIN(1.0, O2_STRESS))
+        IF (AUTO_O2_R .GT. 0.5) O2_STRESS = 1.0
 
 !        WRITE(*,200) O2_CONSUME, O2_AERATION, DO2_CALC, DO2_SAT
 ! 200    FORMAT(' SOLO2: O2 consumption=',F6.3,' aeration=',F6.3,
@@ -198,8 +215,9 @@ C         Allow slight supersaturation (up to 120%)
         ENDIF
 
 C       Recompute O2_STRESS from updated DO2_CALC (fix 1-day lag)
-        O2_STRESS = DO2_CALC / (DO2_CALC + 0.5)
+        O2_STRESS = DO2_CALC / (DO2_CALC + K_O2)
         O2_STRESS = MAX(0.0, MIN(1.0, O2_STRESS))
+        IF (AUTO_O2_R .GT. 0.5) O2_STRESS = 1.0
 
 C       Store updated DO2, saturation, and stress
         CALL PUT('HYDRO','DO2',DO2_CALC)

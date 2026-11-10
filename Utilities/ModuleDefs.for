@@ -120,7 +120,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         CHARACTER (len=1) IHARI, IPLTI, IIRRI, ISIMI
         CHARACTER (len=1) ISWCHE, ISWDIS, ISWNIT
         CHARACTER (len=1) ISWPHO, ISWPOT, ISWSYM, ISWTIL, ISWWAT
-        CHARACTER (len=1) ISWHYDRO  !Hydroponic switch
+        CHARACTER (len=1) ISWHYDRO  !Hydroponic switch (set from MESYS)
+        CHARACTER (len=1) MESYS     !Growing system: S=soil, H=hydroponic
         CHARACTER (len=1) AUTO_PH   !Hydroponic pH control: Y=constant, N=drift
         REAL CHLEN                  !NFT channel length (cm)
         CHARACTER (len=1) MEEVP, MEGHG, MEHYD, MEINF, MELI, MEPHO

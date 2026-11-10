@@ -901,6 +901,35 @@ C-----------------------------------------------------------------------
      &    AUTO_PH,AUTO_VOL,AUTO_CONC,AUTO_O2,
      &    CA_CONC,MG_CONC,S_CONC,CHLEN)
 
+C-----------------------------------------------------------------------
+C     Growing system switch (SYSTM in simulation controls) decides the
+C     mode; the *HYDROPONIC SOLUTION section only supplies the inputs.
+C-----------------------------------------------------------------------
+      IF (ISWITCH % MESYS .EQ. 'H') THEN
+        IF (ISWHYDRO .NE. 'Y') THEN
+          MSG(1) = 'Growing system SYSTM=H (hydroponic), but no valid'
+          MSG(2) = '*HYDROPONIC SOLUTION section (SOLVOL > 0) was found'
+          MSG(3) = 'for this treatment.'
+          CALL WARNING(3,ERRKEY,MSG)
+          CALL ERROR (ERRKEY,30,FILEX,LINEXP)
+        ENDIF
+!       Water balance off: solution volume is not simulated, so the
+!       automatic top up setting has no effect.
+        IF (ISWITCH % ISWWAT .EQ. 'N' .AND. AUTO_VOL .EQ. 'Y') THEN
+          MSG(1) = 'WATER=N: solution water balance is not simulated.'
+          MSG(2) = 'Automatic volume top up (AUVL=Y) is ignored.'
+          CALL WARNING(2,ERRKEY,MSG)
+        ENDIF
+      ELSE
+        IF (ISWHYDRO .EQ. 'Y') THEN
+          MSG(1) = '*HYDROPONIC SOLUTION section found, but growing'
+          MSG(2) = 'system is soil (SYSTM=S). Section is ignored.'
+          MSG(3) = 'Set SYSTM=H to run a hydroponic simulation.'
+          CALL WARNING(3,ERRKEY,MSG)
+        ENDIF
+        ISWHYDRO = 'N'
+      ENDIF
+
 C     Store hydroponic switch in ISWITCH structure for global access
       ISWITCH % ISWHYDRO = ISWHYDRO
       ISWITCH % AUTO_PH = AUTO_PH  ! Store pH control flag

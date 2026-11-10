@@ -691,7 +691,7 @@ C-----------------------------------------------------------------------
      &    WTNSD, WTNUP, WTNFX, XLAI, YRPLT, TRLV, LINTW, LINTP,
      &    WTNRT, WTNSH)
 
-      IF (ISWHYDRO .EQ. 'Y') CALL OPSOL(CONTROL, ISWITCH)
+!     Solution.OUT is written by the HYDROPONICS module (LAND)
 
       CALL OPHARV (CONTROL, ISWITCH,
      &    AGEFAC, CANHT, CANNAA, CANWAA, CROP,            !Input
@@ -1450,7 +1450,7 @@ C-----------------------------------------------------------------------
      &      KStres1, KStres2, KUptake, FracRts)             !Output
         ENDIF
 
-        IF (ISWHYDRO .EQ. 'Y') CALL OPSOL(CONTROL, ISWITCH)
+!       Solution.OUT is written by the HYDROPONICS module (LAND)
       ENDIF
 
 !     Write to Overview.out and summary.out files.
@@ -1473,7 +1473,7 @@ C-----------------------------------------------------------------------
      &      WTNSA, WTNSD, WTNSDA, WTNSDO, WTNSH, WTNSHA,    !Input
      &      WTNSHO, WTNSO, WTNST, WTNUP)                    !Input
         ENDIF
-        IF (ISWHYDRO .EQ. 'Y') CALL OPSOL(CONTROL, ISWITCH)
+!       Solution.OUT is written by the HYDROPONICS module (LAND)
 !-----------------------------------------------------------------------
 !     Calculate harvest residue left in field
         CALL HRes_CGRO(CONTROL,

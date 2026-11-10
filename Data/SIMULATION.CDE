@@ -67,6 +67,11 @@ L        Leaf photosynthesis response curve (hourly)                          IB
 @CDE     DESCRIPTION                                                          SO
 R        Ritchie water balance                                                IB
 
+*Simulation/Methods/Growing System
+@CDE     DESCRIPTION                                                          SO
+S        Soil                                                                 IB
+H        Hydroponic nutrient solution                                         IB
+
 *Simulation/Methods/SOM
 @CDE     DESCRIPTION                                                          SO
 G        Ceres (Godwin)                                                       IB

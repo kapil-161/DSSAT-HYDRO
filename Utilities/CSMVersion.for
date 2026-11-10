@@ -17,7 +17,7 @@
         INTEGER :: Build = 37
       END TYPE VersionType
       TYPE (VersionType) Version
-      CHARACTER(len=*), PARAMETER :: VBranch = '-main'
+      CHARACTER(len=*), PARAMETER :: VBranch = '-calibration-2026-07-28'
 
 !     Version history:
 !       4.8.5.37  FO 2025-11-14 v4.8.5.37 PR 533 Commit SHA: 9e2809b

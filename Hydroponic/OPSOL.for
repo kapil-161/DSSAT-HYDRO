@@ -7,7 +7,7 @@ C-----------------------------------------------------------------------
 C  REVISION       HISTORY
 C  12/22/2025 Created for hydroponic solution output
 C-----------------------------------------------------------------------
-C  Called by: SPAM
+C  Called by: HYDROPONICS
 C  Calls:     GETLUN, HEADER, YR_DOY
 C=======================================================================
       SUBROUTINE OPSOL(CONTROL, ISWITCH)

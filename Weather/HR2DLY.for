@@ -39,17 +39,17 @@
         CALL fio % get('WTH', YRDOY, H, 'RAIN',HRAIN)
         CALL fio % get('WTH', YRDOY, H, 'PAR', HPARV)
 
-        !SRAD in hourly WTH file is in MJ/m2/h; sum directly for daily total
-        SRADMJ = HSRAD
-        !SRADJ must be in W/m2 (J/m2/s) for HMET/HPAR; convert MJ/m2/h -> W/m2
-        SRADJ  = HSRAD * 1.0E6 / 3600.0
+        !SRAD in hourly WTH file is in W/m2; 1 W/m2 for 1 h = 0.0036 MJ/m2
+        SRADMJ = HSRAD * 0.0036
+        !SRADJ must be in W/m2 (J/m2/s) for HMET/HPAR; already in that unit
+        SRADJ  = HSRAD
         CALL fio % set('WTH', YRDOY, H, 'SRADJ',SRADJ)
 
         DSRAD = DSRAD + SRADMJ
         DRAIN = DRAIN + HRAIN
-        !PAR column is optional in the hourly WTH file (mol/m2/h, same
-        !per-hour convention as SRAD in MJ/m2/h). Missing hours return
-        !-99 (FlexibleIO sentinel); only sum hours where data was found.
+        !PAR column is optional in the hourly WTH file (mol/m2/h). Missing
+        !hours return -99 (FlexibleIO sentinel); only sum hours where data
+        !was found.
         IF (HPARV .GT. -90.0) THEN
           DPAR   = DPAR + HPARV
           PARFND = .TRUE.

@@ -43,6 +43,7 @@ C=======================================================================
       USE ModuleData
       IMPLICIT NONE
       EXTERNAL IPDMND, WARNING, ErrorCode, SDCOMP, TABEX, CURV
+      EXTERNAL GETLUN, FIND, IGNORE
       SAVE
 
       CHARACTER*2 CROP
@@ -111,6 +112,11 @@ C=======================================================================
       REAL TURFSL, NSLA
       REAL CUMNSF,NFSL
 
+      REAL PROLFG, WNDIL
+      INTEGER LUNDIL, ERRDIL, LINDIL, FNDDIL, ISCDIL
+      CHARACTER*6  SECDIL
+      CHARACTER*80 C80DIL
+
 !CHP - puncture variables, not functional
       REAL PUNCSD, PUNCTR, RPRPUN
 
@@ -138,6 +144,32 @@ C=======================================================================
      &  XFRUIT, XLEAF, XSLATM, XTRFAC, XVGROW, XXFTEM,    !Output
      &  YLEAF, YSLATM, YSTEM, YTRFAC, YVREF, YXFTEM,      !Output
      &  XFPHT, XFINT, NSLA)                               !Output
+
+!     Optional leaf N dilution (section !*NDILU). WNDIL <= 0 or absent
+!     keeps FNINL constant at PROLFI*0.16 (standard CROPGRO behavior).
+      WNDIL  = -99.
+      PROLFG = PROLFI
+      CALL GETLUN('FILEC', LUNDIL)
+      OPEN (LUNDIL, FILE = FILECC, STATUS = 'OLD', IOSTAT=ERRDIL)
+      IF (ERRDIL .EQ. 0) THEN
+        SECDIL = '!*PLAN'
+        CALL FIND(LUNDIL, SECDIL, LINDIL, FNDDIL)
+        IF (FNDDIL .EQ. 1) THEN
+          CALL IGNORE(LUNDIL, LINDIL, ISCDIL, C80DIL)
+          READ(C80DIL,'(6X,F6.0)',IOSTAT=ERRDIL) PROLFG
+          IF (ERRDIL .NE. 0 .OR. PROLFG .LE. 0.0) PROLFG = PROLFI
+        ENDIF
+        REWIND (LUNDIL)
+        SECDIL = '!*NDIL'
+        CALL FIND(LUNDIL, SECDIL, LINDIL, FNDDIL)
+        IF (FNDDIL .EQ. 1) THEN
+          CALL IGNORE(LUNDIL, LINDIL, ISCDIL, C80DIL)
+          READ(C80DIL,*,IOSTAT=ERRDIL) WNDIL
+          IF (ERRDIL .NE. 0) WNDIL = -99.
+        ENDIF
+        CLOSE (LUNDIL)
+      ENDIF
+      PROLFG = MIN(PROLFG, PROLFI)
 
 !***********************************************************************
 !***********************************************************************
@@ -615,6 +647,13 @@ C 24 changed to TS by Bruce Kimball on 3Jul17
 !-----------------------------------------------------------------------
 !    Compute N Demand for New Tissue, including reproductive and vegetative
 !-----------------------------------------------------------------------
+!     Leaf N dilution: new-leaf N ceiling falls from PROLFI toward
+!     PROLFG as shoot mass (g/m2) accumulates.
+      IF (WNDIL .GT. 0.0) THEN
+        FNINL = (PROLFG + (PROLFI - PROLFG) *
+     &          EXP(-MAX(0.0, WTLF + STMWT) / WNDIL)) * 0.16
+      ENDIF
+
       NDMVEG = (CDMVEG/AGRVG2) * (FRLF*FNINL+FRSTM*FNINS+
      &   FRRT*FNINR)
       NDMNEW = NDMREP + NDMVEG

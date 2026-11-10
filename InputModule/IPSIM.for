@@ -59,6 +59,7 @@ C=======================================================================
       INCLUDE 'COMSWI.blk'
 
       CHARACTER*1   UPCASE,ISIMI, RNMODE
+      CHARACTER*1   MESYS   !Growing system: S=soil, H=hydroponic
       CHARACTER*2   CROP
       CHARACTER*5   NEND,NCODE,IOFF,IAME, TEXT
       CHARACTER*6   ERRKEY,FINDCH
@@ -145,6 +146,7 @@ C=======================================================================
          METMP   = 'D'    !DSSAT / Kimball improved soil temperature
 !        METMP   = 'E'    ! EPIC soil temp routine.
          MEGHG   = '0'
+         MESYS   = 'S'    !Soil-based growing system
 !                   0  => DSSAT original denitrification routine
 !                   1  => DayCent N2O calculation
 
@@ -264,6 +266,11 @@ C
      &        MELI,MEEVP,MEINF,MEPHO,MEHYD,NSWITCH, 
      &        MESOM, MESEV, MESOL, METMP, MEGHG
          !IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEX,LINEXP)
+!        Growing system (SYSTM column, after MEGHG): S=soil, H=hydroponic
+         MESYS = ' '
+         READ (CHARTEST,'(97X,A1)',IOSTAT=ERRNUM) MESYS
+         IF (ERRNUM .NE. 0) MESYS = ' '
+         MESYS = UPCASE(MESYS)
          MEWTH = UPCASE(MEWTH)
          MESIC = UPCASE(MESIC)
          MELI  = UPCASE(MELI)
@@ -512,7 +519,11 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
       CALL FILL_ISWITCH(
      &      CONTROL, ISWITCH, FROP, MODEL, NYRS, RNMODE)
 
-!     Check Simulation control file for control overrides 
+!     Store the growing system before the control file override copies
+!     the switches back from ISWITCH (MESYS is not set by FILL_ISWITCH).
+      ISWITCH % MESYS = MESYS
+
+!     Check Simulation control file for control overrides
       CALL External_SimControls(
      &    CONTROL, FILECTL, ISWITCH,                      !Input
      &    UseSimCtr, CTRMODEL)                            !Output
@@ -540,6 +551,7 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
         MESOL   = ISWITCH % MESOL 
         METMP   = ISWITCH % METMP 
         MEGHG   = ISWITCH % MEGHG 
+        MESYS   = ISWITCH % MESYS 
         IPLTI   = ISWITCH % IPLTI 
         IIRRI   = ISWITCH % IIRRI 
         IFERI   = ISWITCH % IFERI 
@@ -715,6 +727,17 @@ C-----------------------------------------------------------------------
       IF (MEEVP == 'Z' .AND. MEPHO /= 'L') CALL ERROR(ERRKEY,3,' ',0)
 
       IF (MEHYD .EQ. ' ') MEHYD = 'R'
+
+!     Growing system: blank or '.' defaults to soil; anything other than
+!     S or H stops the run.
+      IF (MESYS .EQ. ' ' .OR. MESYS .EQ. '.') MESYS = 'S'
+      IF (INDEX('SH',MESYS) < 1) THEN
+        MSG(1) = 'Invalid growing system (SYSTM): ' // MESYS
+        MSG(2) = 'Use S for soil or H for hydroponic.'
+        CALL WARNING(2,ERRKEY,MSG)
+        CALL ERROR(ERRKEY,13,FILEX,LINEXP)
+      ENDIF
+      ISWITCH % MESYS = MESYS
 
       IF (NSWITCH .LE. 0 .AND. ISWNIT .EQ. 'Y') THEN
         NSWITCH = 1

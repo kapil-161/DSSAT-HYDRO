@@ -11,7 +11,7 @@ C
 C  12/22/2025 Created for hydroponic EC management
 C  12/22/2025 Added EC stress factor calculations
 C-----------------------------------------------------------------------
-C  Called from: SPAM
+C  Called from: HYDROPONICS
 C
 C-----------------------------------------------------------------------
 

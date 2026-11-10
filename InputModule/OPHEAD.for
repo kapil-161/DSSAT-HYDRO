@@ -150,7 +150,7 @@ C=======================================================================
       INCLUDE 'COMSOI.blk'
       INCLUDE 'COMIBS.blk'
 
-      CHARACTER*1   RNMODE
+      CHARACTER*1   RNMODE, MESYS
       CHARACTER*3   RMP,RMS
       CHARACTER*6   ECONO
       CHARACTER*8   MODEL
@@ -423,7 +423,12 @@ c     MJ, Mar 2008: Soil information
       WRITE (HEADER(I),1350) MEPHO,MEEVP,MEINF,MEHYD,MESOM; I=I+1
       WRITE (HEADER(I),1355) ICO2, NSWITCH, MESEV, MESOL, METMP; I=I+1
       WRITE (HEADER(I),1400) IPLTI,IIRRI,IFERI,IRESI,IHARI; I=I+1
-      WRITE (HEADER(I),1405) MEWTH, ISWTIL; I=I+1
+      IF (ISWITCH % ISWHYDRO .EQ. 'Y') THEN
+        MESYS = 'H'
+      ELSE
+        MESYS = 'S'
+      ENDIF
+      WRITE (HEADER(I),1405) MEWTH, ISWTIL, MESYS; I=I+1
 
 
       ICOUNT = I-1
@@ -495,7 +500,7 @@ C-----------------------------------------------------------------------
 
  1400 FORMAT (1X,'MANAGEMENT OPT : PLANTING:',A1,2X,'IRRIG',3X,':',A1,
      & 2X,'FERT :',A1,2X,'RESIDUE:',A1,2X,'HARVEST:',A1,2X)
- 1405 FORMAT (18X,'WEATHER :',A1,2X,'TILLAGE :',A1)
+ 1405 FORMAT (18X,'WEATHER :',A1,2X,'TILLAGE :',A1,2X,'SYSTEM:',A1)
 
       RETURN
       END SUBROUTINE OPHEAD

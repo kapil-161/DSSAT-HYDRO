@@ -28,10 +28,12 @@
 @L PMALB  BDWD  BDHT
  1   -99   -99   -99
 
+! NOTE 2026-11-10: PPOP/PPOE 24.4 -> 15.25 plants/m2 = final stand after destructive harvests (25 of 40 plants per cultivar block left after 23 Dec, 30 Dec, 6 Jan harvests of 5 plants each; Henry Trial 2 Growth.xlsx). PLWT scaled x15.25/24.4 so transplant weight per plant is unchanged.
+! NOTE 2026-11-10: PLRS 20.5 -> 32.0 cm = in-row distance after thinning (1/(15.25 x 0.205 m)); lets simulated canopy width reach the observed 0.29 to 0.32 m.
 *PLANTING DETAILS
 @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
- 1 25349   -99  24.4  24.4     T     R  20.5     0     5 12.68    14    19   -99     3                        Transplant_Salvius (DW ratio 0.07/0.38 x avg FW 0.282g)
- 2 25349   -99  24.4  24.4     T     R  20.5     0     5 13.43    14    19   -99     3                        Transplant_MC (DW ratio 0.06/0.29 x avg FW 0.266g)
+ 1 25349   -99 15.25 15.25     T     R  32.0     0     5  7.92    21    19   -99     3                        Transplant_Salvius (DW ratio 0.07/0.38 x avg FW 0.282g)
+ 2 25349   -99 15.25 15.25     T     R  32.0     0     5  8.39    21    19   -99     3                        Transplant_MC (DW ratio 0.06/0.29 x avg FW 0.266g)
 
 
 *IRRIGATION AND WATER MANAGEMENT
@@ -58,7 +60,7 @@
 
 *HYDROPONIC SOLUTION
 @L  SVOL    EC    PH   DO2  TEMP  NO3C  NH4C    PC    KC   CAC   MGC    SC  CHLN
- 1  50.0  1.55  6.00   8.0  19.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 305.0
+ 1  50.0  1.55  6.00   8.0  25.0  88.0   7.0  23.5 146.7  94.1  14.3  84.6 305.0
 
 
 *HYDROPONIC CONTROL
@@ -70,8 +72,8 @@
  1 GE              1     1     S 25349  2150 NFT Cultivar Trial 2      -99
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
  1 OP              Y     Y     N     N     N     N     N     N     M
-@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
- 1 ME              H     M     E     R     S     L     Y     1     G     S     2
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL METMP MEGHG SYSTM
+ 1 ME              H     M     E     R     S     L     R     1     G     S     2     D     0     H
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
  1 MA              R     N     R     N     R
 @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT

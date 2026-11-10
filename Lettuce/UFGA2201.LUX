@@ -43,10 +43,10 @@ IhingerHof Research Station
 
 *PLANTING DETAILS
 @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
- 1 22103   -99  12.3  12.3     T     R    29     0     5   1.0     7    20   -99     3                        E1_24C_Apr13
- 2 22243   -99  12.3  12.3     T     R    29     0     5   1.0     7    20   -99     3                        E2_26C_Aug31
- 3 22195   -99  12.3  12.3     T     R    29     0     5   1.0     7    20   -99     3                        E3_28C_Jul14
- 4 22061   -99  12.3  12.3     T     R    29     0     5   1.0     7    20   -99     3                        E4_30C_Mar02
+ 1 22103   -99  12.3  12.3     T     R    29     0     5  6.15     7    20   -99     3                        E1_24C_Apr13
+ 2 22243   -99  12.3  12.3     T     R    29     0     5  6.15     7    20   -99     3                        E2_26C_Aug31
+ 3 22195   -99  12.3  12.3     T     R    29     0     5  6.15     7    20   -99     3                        E3_28C_Jul14
+ 4 22061   -99  12.3  12.3     T     R    29     0     5  6.15     7    20   -99     3                        E4_30C_Mar02
 
 *IRRIGATION (AUTOMATIC)
 @I  IEFF  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
@@ -74,10 +74,10 @@ IhingerHof Research Station
 ! Growth chamber: temp and SRAD from hourly WTH file; CO2 from measurements
 ! CO2: measured per experimental group (709/743/706/770 ppm)
 @E ODATE EDAY  ERAD  EMAX  EMIN  ERAIN ECO2  EDEW  EWIND ENVNAME
- 1 22103 R  16 R   7 R  24 R  19 A   0 R 709 A   0 A   0 24
- 2 22243 R  16 R   7 R  26 R  19 A   0 R 743 A   0 A   0 26
- 3 22195 R  16 R   7 R  28 R  19 A   0 R 706 A   0 A   0 28
- 4 22061 R  16 R   7 R  30 R  19 A   0 R 770 A   0 A   0 30
+ 1 22103 A   0 A   0 A   0 A   0 A   0 R 709 A   0 A   0 24
+ 2 22243 A   0 A   0 A   0 A   0 A   0 R 743 A   0 A   0 26
+ 3 22195 A   0 A   0 A   0 A   0 A   0 R 706 A   0 A   0 28
+ 4 22061 A   0 A   0 A   0 A   0 A   0 R 770 A   0 A   0 30
 
 *HARVEST DETAILS
 @H HDATE  HSTG  HCOM HSIZE   HPC  HBPC HNAME
@@ -89,22 +89,23 @@ IhingerHof Research Station
 !Modification in experiment file for hydroponics settings
 *HYDROPONIC SOLUTION
 @L  SVOL    EC    PH   DO2  TEMP  NO3C  NH4C    PC    KC   CAC   MGC    SC  CHLN
- 1  50.0  1.50  5.75   8.0  20.0 150.0  12.0  40.0 250.0 183.0  15.0 120.1 326.5
- 2  50.0  1.50  5.75   8.0  20.0 150.0  12.0  40.0 250.0 183.0  15.0 120.1 326.5
- 3  50.0  1.50  5.75   8.0  20.0 150.0  12.0  40.0 250.0 183.0  15.0 120.1 326.5
- 4  50.0  1.50  5.75   8.0  20.0 150.0  12.0  40.0 250.0 183.0  15.0 120.1 326.5
+ 1  30.8  1.20  5.80   8.0  25.0 105.1   7.7  14.5  90.6  66.3   5.4  43.6 183.0
+ 2  30.8  1.20  5.80   8.0  25.0 105.1   7.7  14.5  90.6  66.3   5.4  43.6 183.0
+ 3  30.8  1.20  5.80   8.0  25.0 105.1   7.7  14.5  90.6  66.3   5.4  43.6 183.0
+ 4  30.8  1.20  5.80   8.0  25.0 105.1   7.7  14.5  90.6  66.3   5.4  43.6 183.0
+! NOTE 2026-11-09: SVOL = solution volume / growing area: 40 L tank per replicate (Pompeo thesis) / (16 plants / PPOP 12.3 = 1.30 m2) = 30.8 mm (was 40.0, litres entered as mm).
 
 *HYDROPONIC CONTROL
 @  L  AUTO_PH  AUTO_VOL  AUTO_CONC  AUTO_O2
-   1     Y        Y         O          Y
+   1     Y        Y         I          Y
 
 *SIMULATION CONTROLS
 @N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
  1 GE              1     1     S 22061  2150 NFT Temp x Cultivar Test
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
  1 OP              Y     Y     N     N     N     N     N     N     M
-@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
- 1 ME              H     M     E     R     S     L     Y     1     G     S     2
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL METMP MEGHG SYSTM
+ 1 ME              H     M     E     R     S     L     R     1     G     S     2     D     0     H
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
  1 MA              R     N     R     N     R
 @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT

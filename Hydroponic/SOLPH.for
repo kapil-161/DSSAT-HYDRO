@@ -17,7 +17,7 @@ C             than one day's depletion shift, causing the sign of A to flip
 C             and pH to swing ±2 units every day.  Prognostic integration
 C             with CO2-equilibrium HCO3- is retained instead.
 C-----------------------------------------------------------------------
-C  Called from: SPAM or main hydroponic routine
+C  Called from: HYDROPONICS
 C
 C-----------------------------------------------------------------------
 
@@ -430,6 +430,19 @@ C-----------------------------------------------------------------------
      &                         EXP(PH_KM_ALPHA_P   * PH_DEVIATION)))
         PH_KM_FACTOR_K   = MAX(1.0, MIN(5.0,
      &                         EXP(PH_KM_ALPHA_K   * PH_DEVIATION)))
+
+C       AUTO_PH=Y: pH is held constant at the value in the experiment
+C       file, so no pH effect is applied to uptake
+        IF (AUTO_PH_R .GT. 0.5) THEN
+          PH_AVAIL_NO3 = 1.0
+          PH_AVAIL_NH4 = 1.0
+          PH_AVAIL_P   = 1.0
+          PH_AVAIL_K   = 1.0
+          PH_KM_FACTOR_NO3 = 1.0
+          PH_KM_FACTOR_NH4 = 1.0
+          PH_KM_FACTOR_P   = 1.0
+          PH_KM_FACTOR_K   = 1.0
+        ENDIF
 
         CALL PUT('HYDRO','PH_AVAIL_NO3',PH_AVAIL_NO3)
         CALL PUT('HYDRO','PH_AVAIL_NH4',PH_AVAIL_NH4)

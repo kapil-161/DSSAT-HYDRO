@@ -94,7 +94,9 @@ C========================================================================
       REAL PStres2, KStres2
 
       TYPE (ControlType) CONTROL
+      TYPE (SwitchType)  ISWITCH
       CALL GET(CONTROL)
+      CALL GET(ISWITCH)
       DAS = CONTROL % DAS
 
 !***********************************************************************
@@ -282,6 +284,17 @@ C-----------------------------------------------------------------------
       
 !     FO/KJB - Running average
       NSTRES = XNSTRES * 0.5 + PNSTRES * 0.5
+
+!     NITRO=N: the N balance is not simulated, so the crop has no N
+!     stress. Without this, SUPPN (NFIXN + TRNU + NMINEA) leaves out
+!     the seed or transplant N released each day (SDNPL*DTX/7, added
+!     to NAVL in CROPGRO). While that store covers demand, NFIXN = 0,
+!     SUPPN = 0 and XNSTRES = 0, a false stress that lasts about 10
+!     days for transplants. KB 11/09/2026
+      IF (ISWITCH % ISWNIT .EQ. 'N') THEN
+        XNSTRES = 1.0
+        NSTRES  = 1.0
+      ENDIF
 
 !-----------------------------------------------------------------------
 !     K stress now comes from K_Plant module (KStres2) - consistent with P stress

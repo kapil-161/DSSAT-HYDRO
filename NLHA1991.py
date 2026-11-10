@@ -291,8 +291,8 @@ Greenhouse, Wageningen University, The Netherlands
  1 GE              1     1     S {planting_date}  2150 Heinen1994 Exp6705 NFT
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
  1 OP              Y     Y     N     Y     Y     N     N     N     M
-@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
- 1 ME              M     M     E     R     S     L     Y     1     G     S     2
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL METMP MEGHG SYSTM
+ 1 ME              M     M     E     R     S     L     R     1     G     S     2     D     0     H
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
  1 MA              R     N     N     N     R
 @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT

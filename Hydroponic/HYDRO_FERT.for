@@ -11,7 +11,7 @@ C
 C  Timing: INTEGR phase, before HYDRO_WATER, so added nutrients are
 C  subject to the same transpiration concentration step as existing ions.
 C-----------------------------------------------------------------------
-C  Called from: SPAM
+C  Called from: HYDROPONICS
 C  Calls  : FertTypeRead (via FertType_mod, only if not yet loaded)
 C=======================================================================
 

@@ -46,13 +46,11 @@ C=======================================================================
       USE ModuleDefs
       USE ModuleData
       USE FloodModule
-      USE HydroFertData_mod
 
       IMPLICIT NONE
       EXTERNAL ETPHOT, STEMP_EPIC, STEMP, ROOTWU, SOILEV, TRANS
       EXTERNAL MULCH_EVAP, OPSPAM, PET, PSE, FLOOD_EVAP, ESR_SOILEVAP
       EXTERNAL XTRACT
-      EXTERNAL SOLEC, SOLPH, SOLO2, OPSOL, HYDRO_WATER, HYDRO_FERT
       SAVE
 
       CHARACTER*1  IDETW, ISWWAT, ISWHYDRO
@@ -88,19 +86,13 @@ C=======================================================================
 
 !     P Stress on photosynthesis
       REAL PSTRES1
+!     Hydroponic solution evaporation through the plant holes
+      REAL PLTPOP, FEXP
+      REAL, PARAMETER :: HOLED = 2.54  ! Plant hole diameter (cm),
+                                       ! fixed assumption
 !     Hourly transpiration for MEEVP=H
       REAL, DIMENSION(TS)    :: ET0
 
-!     Hydroponic solution management variables
-      REAL NO3_CONC, NH4_CONC, P_CONC, K_CONC  ! Solution concentrations (mg/L)
-      REAL EC_CALC, EC_TARGET                  ! Electrical conductivity (dS/m)
-      REAL PH_CALC, PH_TARGET                  ! pH
-      REAL DO2_CALC, DO2_SAT                   ! Dissolved oxygen (mg/L)
-      REAL UNO3_HYDRO, UNH4_HYDRO              ! N uptake for pH calculation (kg/ha/d)
-      REAL UPO4_HYDRO, UK_HYDRO                ! P and K uptake (kg/ha/d)
-      REAL ROOT_RESP                           ! Root respiration for O2 consumption
-      REAL O2_STRESS_SPAM                      ! O2 stress factor for water uptake (0-1)
-      REAL PLTPOP                              ! Plant population (plants/m2)
 
 !-----------------------------------------------------------------------
 !     Define constructed variable types based on definitions in
@@ -163,13 +155,6 @@ C=======================================================================
       CALL PUT('SPAM', 'KE', -99.0)
       CALL PUT('SPAM', 'KC', -99.0)
 
-!-----------------------------------------------------------------------
-!     Initialize hydroponic solution output file (delete old file)
-!-----------------------------------------------------------------------
-      IF (ISWHYDRO .EQ. 'Y') THEN
-        CALL OPSOL(CONTROL, ISWITCH)
-      ENDIF
-
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -219,15 +204,11 @@ C=======================================================================
       IF (MEEVP .NE. 'Z') THEN
         IF (ISWHYDRO .EQ. 'Y') THEN
 !         HYDROPONIC MODE: Skip soil-related routines
-!         Root water uptake is handled by HYDRO_WATER
-!         No soil evaporation in hydroponic systems
+!         Root water uptake is handled by the HYDROPONICS module,
+!         called from LAND. No soil evaporation in hydroponic systems.
           RWU   = 0.0
           TRWUP = 0.0
           ES    = 0.0
-!         Initialize hydroponic water module
-          CALL HYDRO_WATER(CONTROL, ISWITCH,
-     &      0.0, RWUMX,                         !Input - EP not needed in SEASINIT
-     &      TRWUP, TRWU, ES)                    !Output
         ELSE
 !         SOIL MODE: Initialize root water uptake and soil evaporation
           CALL ROOTWU(SEASINIT,
@@ -271,60 +252,6 @@ C=======================================================================
      &    CEF, CEM, CEO, CEP, CES, CET, CEVAP, EF, EM,
      &    EO, EOP, EOS, EP, ES, ET, TMAX, TMIN, TRWUP, SRAD,
      &    ES_LYR, SOILPROP)
-      ENDIF
-
-!-----------------------------------------------------------------------
-!     HYDROPONIC SOLUTION OUTPUT INITIALIZATION
-!-----------------------------------------------------------------------
-      IF (ISWHYDRO .EQ. 'Y') THEN
-!       Initialize solution concentrations for output
-        CALL GET('HYDRO','NO3_CONC',NO3_CONC)
-        CALL GET('HYDRO','NH4_CONC',NH4_CONC)
-        CALL GET('HYDRO','P_CONC',P_CONC)
-        CALL GET('HYDRO','K_CONC',K_CONC)
-
-!       Ensure P and K are initialized (default if not set)
-        IF (P_CONC .LT. 0.1) THEN
-          P_CONC = 60.0  ! Default P concentration (mg/L)
-          CALL PUT('HYDRO','P_CONC',P_CONC)
-        ENDIF
-        IF (K_CONC .LT. 0.1) THEN
-          K_CONC = 240.0  ! Default K concentration (mg/L)
-          CALL PUT('HYDRO','K_CONC',K_CONC)
-        ENDIF
-
-!       Get plant population for initialization
-        CALL GET('PLANT','PLTPOP',PLTPOP)
-        IF (PLTPOP .LT. 0.1) PLTPOP = 10.0  ! Default
-
-!       Initialize solution management modules to get proper values
-!       Call SOLEC to initialize EC
-        CALL SOLEC(CONTROL, ISWITCH,
-     &    NO3_CONC, NH4_CONC, P_CONC, K_CONC,      !Input
-     &    EC_CALC, EC_TARGET)                       !Output
-
-!       Call SOLPH to initialize pH (with zero uptake for initialization)
-        CALL SOLPH(CONTROL, ISWITCH,
-     &    0.0, 0.0,                                  !Input - zero uptake for init
-     &    PH_CALC, PH_TARGET)                       !Output
-
-!       Call SOLO2 to initialize DO2
-        ROOT_RESP = 0.0  ! Zero for initialization
-        CALL SOLO2(CONTROL, ISWITCH, WEATHER,
-     &    PLTPOP, ROOT_RESP,                        !Input
-     &    DO2_CALC, DO2_SAT)                        !Output
-
-!       Initialize uptake rates
-        UNO3_HYDRO = 0.0
-        UNH4_HYDRO = 0.0
-        UPO4_HYDRO = 0.0
-        UK_HYDRO = 0.0
-
-!       Initialize hydroponic fertilizer events
-        CALL HYDRO_FERT(CONTROL, ISWITCH)
-
-!       Call OPSOL to initialize output file (SEASINIT phase)
-        CALL OPSOL(CONTROL, ISWITCH)
       ENDIF
 
 !     Transfer data to storage routine
@@ -416,12 +343,9 @@ C=======================================================================
               TRWUP = 0.0
             ENDIF
           ELSE
-!           HYDROPONIC MODE: Calculate potential supply from solution
+!           HYDROPONIC MODE: TRWUP was calculated by HYDRO_WATER,
+!           called from the HYDROPONICS module before SPAM.
             RWU   = 0.0       ! No layer uptake
-!           Call HYDRO_WATER in RATE phase to calculate TRWUP
-            CALL HYDRO_WATER(CONTROL, ISWITCH,
-     &        0.0, RWUMX,                     !Input - EP not needed in RATE
-     &        TRWUP, TRWU, ES)                !Output - TRWUP calculated here
           ENDIF
 
 !-----------------------------------------------------------------------
@@ -458,14 +382,27 @@ C=======================================================================
           ES = 0.; EM = 0.; EF = 0.; EVAP = 0.0
           UPFLOW = 0.0; ES_LYR = 0.0
 
-!         Skip soil evaporation calculations in hydroponic mode
+!         Hydroponic mode: evaporation from the solution surface
           IF (ISWHYDRO .EQ. 'Y') THEN
-!           HYDROPONIC MODE: No soil, mulch, or flood evaporation
-            ES = 0.0
+!           Channels and reservoir are covered; the solution is exposed
+!           only at the plant holes, one hole per plant. The wet surface
+!           never dries, so it evaporates at the potential rate under
+!           the canopy (EOS, from PSE, as in soil mode) times the
+!           exposed fraction of the ground area:
+!             FEXP = PLTPOP * pi * (HOLED/2)**2 / 10000
+!           No evaporation when the water balance is off (WATER=N).
             EM = 0.0
             EF = 0.0
-            EVAP = 0.0
-            GOTO 350  ! Skip to after evaporation calculations
+            ES = 0.0
+            IF (ISWWAT .EQ. 'Y') THEN
+              CALL GET('PLANT','PLTPOP',PLTPOP)
+              PLTPOP = MAX(0.0, PLTPOP)
+              FEXP = PLTPOP * 3.14159 * (HOLED / 2.0)**2 / 10000.
+              FEXP = MIN(1.0, FEXP)
+              ES = EOS * FEXP
+            ENDIF
+            EVAP = ES
+            GOTO 350  ! Skip soil, mulch and flood evaporation
           ENDIF
 
 !         First meet evaporative demand from floodwater
@@ -555,15 +492,8 @@ C=======================================================================
 !         ACTUAL TRANSPIRATION
 !-----------------------------------------------------------------------
           IF (ISWHYDRO .EQ. 'Y') THEN
-!           Refresh hydroponic EC stress before computing actual
-!           transpiration so today's osmotic penalty affects EP.
-            CALL GET('HYDRO','NO3_CONC',NO3_CONC)
-            CALL GET('HYDRO','NH4_CONC',NH4_CONC)
-            CALL GET('HYDRO','P_CONC',P_CONC)
-            CALL GET('HYDRO','K_CONC',K_CONC)
-            CALL SOLEC(CONTROL, ISWITCH,
-     &        NO3_CONC, NH4_CONC, P_CONC, K_CONC,
-     &        EC_CALC, EC_TARGET)
+!           Today's EC stress on transpiration was calculated by
+!           SOLEC, called from the HYDROPONICS module before SPAM.
 !           HYDROPONIC MODE: Water is unlimited but high EC causes osmotic
 !           stress (stomatal closure), reducing actual below potential
             ECSTRESS_TRANSP = 1.0
@@ -643,51 +573,6 @@ C         Override EP in hydroponic mode to ensure demand-based transpiration
 !     flood variable.
       FLOODWAT % EF = EF
 
-!-----------------------------------------------------------------------
-!     HYDROPONIC SOLUTION MANAGEMENT (RATE phase)
-!-----------------------------------------------------------------------
-      IF (ISWHYDRO .EQ. 'Y') THEN
-!       Get current solution concentrations from ModuleData
-        CALL GET('HYDRO','NO3_CONC',NO3_CONC)
-        CALL GET('HYDRO','NH4_CONC',NH4_CONC)
-        CALL GET('HYDRO','P_CONC',P_CONC)
-        CALL GET('HYDRO','K_CONC',K_CONC)
-
-!       Get plant population from ModuleData (needed for DO2 calculation)
-        CALL GET('PLANT','PLTPOP',PLTPOP)
-
-!       Calculate EC based on current nutrient concentrations
-        CALL SOLEC(CONTROL, ISWITCH,
-     &    NO3_CONC, NH4_CONC, P_CONC, K_CONC,      !Input
-     &    EC_CALC, EC_TARGET)                       !Output
-
-!       Get N uptake from ModuleData for pH calculation
-!       (These should be set by NUPTAK in plant module)
-        UNO3_HYDRO = 0.0
-        UNH4_HYDRO = 0.0
-        UPO4_HYDRO = 0.0
-        UK_HYDRO = 0.0
-!       Try to get from HYDRO module (stored by NUPTAK)
-        CALL GET('HYDRO','UNO3',UNO3_HYDRO)
-        CALL GET('HYDRO','UNH4',UNH4_HYDRO)
-        CALL GET('HYDRO','UPO4',UPO4_HYDRO)
-        CALL GET('HYDRO','UK',UK_HYDRO)
-
-!       Calculate pH based on N uptake pattern
-        CALL SOLPH(CONTROL, ISWITCH,
-     &    UNO3_HYDRO, UNH4_HYDRO,                   !Input
-     &    PH_CALC, PH_TARGET)                       !Output
-
-!       Calculate dissolved oxygen
-!       Get root respiration from ROOTS.for (set during INTEGR, 1-day lag OK)
-        CALL GET('HYDRO','ROOT_RESP',ROOT_RESP)
-        IF (ROOT_RESP .LT. 0.0) ROOT_RESP = 0.0
-
-        CALL SOLO2(CONTROL, ISWITCH, WEATHER,
-     &    PLTPOP, ROOT_RESP,                        !Input
-     &    DO2_CALC, DO2_SAT)                        !Output
-      ENDIF
-
 !     Transfer data to storage routine
       CALL PUT('SPAM', 'EF',  EF)
       CALL PUT('SPAM', 'EM',  EM)
@@ -714,33 +599,6 @@ C         Override EP in hydroponic mode to ensure demand-based transpiration
         CES = CES + ES
         CEVAP=CEVAP + EVAP
         CET = CET + ET
-      ENDIF
-
-!-----------------------------------------------------------------------
-!     HYDROPONIC SOLUTION MANAGEMENT (INTEGR phase)
-!-----------------------------------------------------------------------
-      IF (ISWHYDRO .EQ. 'Y') THEN
-!       Apply any scheduled nutrient additions for today
-        CALL HYDRO_FERT(CONTROL, ISWITCH)
-
-!       Update solution volume based on water balance
-!       (water additions, plant uptake, evaporation)
-        CALL HYDRO_WATER(CONTROL, ISWITCH,
-     &    EP, RWUMX,                               !Input - transpiration
-     &    TRWUP, TRWU, ES)                         !Output
-
-!       Update solution properties after uptake
-        CALL SOLEC(CONTROL, ISWITCH,
-     &    NO3_CONC, NH4_CONC, P_CONC, K_CONC,      !Input
-     &    EC_CALC, EC_TARGET)                       !Output (INTEGR)
-
-        CALL SOLPH(CONTROL, ISWITCH,
-     &    UNO3_HYDRO, UNH4_HYDRO,                   !Input
-     &    PH_CALC, PH_TARGET)                       !Output (INTEGR)
-
-        CALL SOLO2(CONTROL, ISWITCH, WEATHER,
-     &    PLTPOP, ROOT_RESP,                        !Input
-     &    DO2_CALC, DO2_SAT)                        !Output (INTEGR)
       ENDIF
 
       IF (IDETW .EQ. 'Y') THEN

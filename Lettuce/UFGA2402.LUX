@@ -28,7 +28,7 @@
 
 *FIELDS
 @L ID_FIELD WSTA....  FLSA  FLOB  FLDT  FLDD  FLDS  FLST SLTX  SLDP  ID_SOIL    FLNAME
- 1 UFGB0001 DCHO2402   -99   -99   -99   -99   -99   -99 -99    -99  -99        Hydroponic NFT Chamber
+ 1 UFGB0001 DCHO2402   -99   -99   -99   -99   -99   -99 -99    -99  IB00000005 Hydroponic NFT Chamber
 @L ...........XCRD ...........YCRD .....ELEV .............AREA .SLEN .FLWR .SLAS FLHST FHDUR
  1             -99             -99       -99                50   -99   -99   -99   -99   -99
 @L PMALB  BDWD  BDHT
@@ -58,11 +58,34 @@
  1   -99   -99   -99 Not used in hydroponics
 
 *ENVIRONMENT MODIFICATIONS
+! ECO2 corrected 2026-08-06. Recomputed directly from raw chamber sensor logs
+! (chamber_304_combined.csv / chamber_306_combined.csv / autopilot_combined.csv
+! in the Coon raw_data_files folder), pooling ALL valid readings across ALL
+! replicate grows sharing each temperature (not just the single grow the
+! previous values were apparently drawn from). chamber306's CO2 sensor is
+! dead for its entire history (0 valid readings ever) so grows g4/g6/g10/g11/
+! g13 contribute no CO2 data; pooled means below come only from whichever
+! grows had a working sensor for that temperature:
+!   t1 (21.25C): g3+g5,           n=232077, mean=405.0 -> unchanged
+!   t2 (24.75C): g7+g8,           n=14975,  mean=647.9 -> was 635
+!   t3 (30.75C): g9 ONLY,         n=7489,   mean=679.1 -> was 545 (only 1 of
+!                                           3 replicate grows has any CO2 data)
+!   t4 (33.75C): g12+g14,         n=14976,  mean=699.6 -> was 494
+! CAVEAT: raw chamber304 readings are noisy (individual values seen as low as
+! 2-3 ppm and as high as ~1185 ppm within a single window), and Coon's own
+! dissertation (Ch.3, 3.2.1) reports one pooled figure of 398+-2.18 umol/mol
+! "from only 5 of the 12 growth cycles due to sensor malfunctions" without
+! breaking it out by temperature -- it is not yet resolved whether that
+! figure describes the treatment chambers themselves or the separate
+! seedling grow tent (also stated at ~418 ppm during germination). These
+! recomputed values are the best traceable-to-raw-data numbers available and
+! supersede the previous per-treatment figures, which were closer to this
+! dissertation figure only for t1 by chance, but are logged as uncertain.
 @E ODATE  EDAY  ERAD  EMAX  EMIN ERAIN  ECO2  EDEW EWIND ENVNAME
- 1 24001 - -99 - -99 - -99 - -99 A 0.0 R 405 A   0 A   0 t1_21.25C_g3_Dec2024
- 2 24043 - -99 - -99 - -99 - -99 A 0.0 R 635 A   0 A   0 t2_24.75C_g6_Jan2025
- 3 24085 - -99 - -99 - -99 - -99 A 0.0 R 545 A   0 A   0 t3_30.75C_g9_Apr2025
- 4 24127 - -99 - -99 - -99 - -99 A 0.0 R 494 A   0 A   0 t4_33.75C_g12_May2025
+ 1 24001 - -99 - -99 - -99 - -99 A 0.0 R 405 A   0 A   0 t1_21.25C_g3+g5_pooled
+ 2 24043 - -99 - -99 - -99 - -99 A 0.0 R 648 A   0 A   0 t2_24.75C_g7+g8_pooled
+ 3 24085 - -99 - -99 - -99 - -99 A 0.0 R 679 A   0 A   0 t3_30.75C_g9only_pooled
+ 4 24127 - -99 - -99 - -99 - -99 A 0.0 R 700 A   0 A   0 t4_33.75C_g12+g14_pooled
 
 *HARVEST DETAILS
 @H HDATE  HSTG  HCOM HSIZE   HPC  HBPC HNAME
@@ -77,10 +100,27 @@
 
 *HYDROPONIC SOLUTION
 @L  SVOL    EC    PH   DO2  TEMP  NO3C  NH4C    PC    KC   CAC   MGC    SC  CHLN
- 1  50.0  1.50  5.75   8.0  21.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 183.0
- 2  50.0  1.50  5.75   8.0  25.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 183.0
- 3  50.0  1.50  5.75   8.0  31.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 183.0
- 4  50.0  1.50  5.75   8.0  34.0 150.0  12.0  40.0 250.0 160.3  24.3 144.1 183.0
+ 1  50.0  1.50  5.75   8.0  25.0 150.0  12.0  40.0  99.6 160.3  24.3 144.1 183.0
+ 2  50.0  1.50  5.75   8.0  25.0 150.0  12.0  40.0  99.6 160.3  24.3 144.1 183.0
+ 3  50.0  1.50  5.75   8.0  25.0 150.0  12.0  40.0  99.6 160.3  24.3 144.1 183.0
+ 4  50.0  1.50  5.75   8.0  25.0 150.0  12.0  40.0  99.6 160.3  24.3 144.1 183.0
+! NOTE: HYDROPONIC SOLUTION section is an APPROXIMATION added 2026-08-04. The
+!       real UFGA2402 experiment (Coon dissertation, Ch. 3/4, AEC model source
+!       for the 21/25/31/34C treatments) was NOT hydroponic NFT: it was
+!       1-gallon pots of soilless substrate (Pro-Mix HP Mycorrhizae) with
+!       slow-release Osmocote Plus 15N-9P2O5-12K2O fertilizer, watered to
+!       field capacity, not fed liquid nutrient solution. This HS section is
+!       a hydroponic-equivalent-feed stand-in, not a literature setpoint.
+! NOTE: KC corrected 99.6 (was 250.0, an apparent copy-paste from UFGA2201's
+!       generic recipe). Derived from Osmocote's guaranteed analysis: K2O 12%
+!       -> elemental K 12%*(2*39.098/94.196)=9.96%; P2O5 9% -> elemental P
+!       9%*(2*30.974/141.944)=3.93%. Applying the fertilizer's N:P:K mass
+!       ratio (15:3.93:9.96) to the existing NO3C=150 gives P=39.3 (matches
+!       file's PC=40.0 already, so PC left unchanged) and K=150*9.96/15=99.6.
+!       NO3C/PC/CAC/MGC/SC absolute levels, and the Osmocote application rate
+!       itself (dissertation states "6.26 g/m3", physically implausible for a
+!       1-gal pot -- likely a kg/m3 typo -- so no absolute mg/L conversion was
+!       attempted), remain UNVERIFIED approximations, not literature values.
 
 *HYDROPONIC CONTROL
 @L  AUPH  AUVL  AUCN  AUO2
@@ -90,9 +130,9 @@
 @N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
  1 GE              1     1     S 24001  2150 DC Lettuce Temp x Variety CRGRO
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
- 1 OP              Y     Y     N     N     N     N     N     N     M
-@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
- 1 ME              H     M     E     F     S     L     Y     1     G     S     2
+ 1 OP              N     N     N     N     N     N     N     N     M
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL METMP MEGHG SYSTM
+ 1 ME              H     M     E     F     S     L     R     1     G     S     2     D     0     S
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
  1 MA              R     N     N     N     R
 @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT

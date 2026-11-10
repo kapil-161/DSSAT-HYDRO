@@ -286,6 +286,9 @@ Incorrect weather method option selected.  Please correct file.
 IPEXP    29
 File not found.  Please check file name or create file.
 
+IPEXP    30
+Growing system SYSTM=H (hydroponic) but no valid *HYDROPONIC SOLUTION section.
+
 IPEXP    80
 No valid soil file found.
 
@@ -507,6 +510,9 @@ Automatic harvest date is defined prior to the start of simulation.
 
 IPSIM    11
 Harvest at maturity option not available for this crop.  Correct input file.
+
+IPSIM    13
+Invalid growing system (SYSTM). Use S for soil or H for hydroponic.
 
 SIMCTR    1
 Error in start simulation date input.  Check format.

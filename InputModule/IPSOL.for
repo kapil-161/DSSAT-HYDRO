@@ -71,7 +71,9 @@ C     Note: AUTO_EC removed - EC always drifts naturally with nutrient uptake
       REWIND(LUNEXP)
 
 C     Find *HYDROPONIC SOLUTION section
-      CALL FIND (LUNEXP,FINDCH,LINEXP,IFIND)
+C     Full section name: '*HYDRO' alone would also match
+C     *HYDROPONIC CONTROL when the SOLUTION section is missing.
+      CALL FIND2(LUNEXP,'*HYDROPONIC SOLUTION',LINEXP,IFIND)
 
       IF (IFIND .EQ. 0) THEN
 C       Section not found - this is a soil-based experiment

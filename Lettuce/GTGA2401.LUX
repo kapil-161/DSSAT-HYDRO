@@ -12,12 +12,12 @@
 
 *TREATMENTS                        -------------FACTOR LEVELS------------
 @N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM HS HC
- 1 1 0 0 N11_Bibb                   1  1  0  1  1  0  0  0  0  0  0  1  1  1  1
- 2 1 0 0 N25_Bibb                   1  1  0  1  1  0  0  0  0  0  0  1  1  2  1
- 3 1 0 0 N33_Bibb                   1  1  0  1  1  0  0  0  0  0  0  1  1  3  1
- 4 1 0 0 N66_Bibb                   1  1  0  1  1  0  0  0  0  0  0  1  1  4  1
- 5 1 0 0 N132_Bibb                  1  1  0  1  1  0  0  0  0  0  0  1  1  5  1
- 6 1 0 0 N264_Bibb                  1  1  0  1  1  0  0  0  0  0  0  1  1  6  1
+ 1 1 0 0 N11_Bibb                   1  1  0  1  1  0  0  0  0  0  1  1  1  1  1
+ 2 1 0 0 N25_Bibb                   1  1  0  1  1  0  0  0  0  0  1  1  1  2  1
+ 3 1 0 0 N33_Bibb                   1  1  0  1  1  0  0  0  0  0  1  1  1  3  1
+ 4 1 0 0 N66_Bibb                   1  1  0  1  1  0  0  0  0  0  1  1  1  4  1
+ 5 1 0 0 N132_Bibb                  1  1  0  1  1  0  0  0  0  0  1  1  1  5  1
+ 6 1 0 0 N264_Bibb                  1  1  0  1  1  0  0  0  0  0  1  1  1  6  1
 
 *CULTIVARS
 @C CR INGENO CNAME
@@ -37,7 +37,7 @@
 
 *PLANTING DETAILS
 @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
- 1 23014   -99    16    16     T     R    25     0     5  1.00    14  21.5   -99     3                        Bibb transplant nominal Jan14-2023
+ 1 23014   -99    16    16     T     R    25     0     5  3.00    14  21.5   -99     3                        Bibb transplant nominal Jan14-2023
 
 *IRRIGATION AND WATER MANAGEMENT
 @I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
@@ -53,7 +53,7 @@
 
 *ENVIRONMENT MODIFICATIONS
 @E ODATE EDAY  ERAD  EMAX  EMIN  ERAIN ECO2  EDEW  EWIND ENVNAME
- 1 23014 - -99 - -99 - 1.5 - 1.5 - 0.0 - 400 -   0 -   0 Chamber_21.5C_LED
+ 1 23014 - -99 - -99 - 1.5 - 1.5 - 0.0 R 400 -   0 -   0 Chamber_21.5C_LED
 
 *HARVEST DETAILS
 @H HDATE  HSTG  HCOM HSIZE   HPC  HBPC HNAME
@@ -65,12 +65,12 @@
 
 *HYDROPONIC SOLUTION
 @L  SVOL    EC    PH   DO2  TEMP  NO3C  NH4C    PC    KC   CAC   MGC    SC  CHLN
- 1  15.5  1.30  6.00   8.0  21.5  10.6   0.0 154.1 210.0  82.5  24.3  96.6 152.0
- 2  15.5  1.30  6.00   8.0  21.5  25.3   0.0  93.9 210.0  82.5  24.3  96.6 152.0
- 3  15.5  1.40  6.00   8.0  21.5  33.1   0.0 109.9 210.0  82.5  24.3  96.6 152.0
- 4  15.5  1.40  6.00   8.0  21.5  64.9   1.2  31.0 210.0  82.5  24.3  96.6 152.0
- 5  15.5  1.50  6.00   8.0  21.5 125.6   6.6  31.0 210.0  82.5  24.3  96.6 152.0
- 6  15.5  2.20  6.00   8.0  21.5 191.7  72.8  31.0 218.4  82.5  24.3  96.6 152.0
+ 1  15.5  1.30  6.00   8.0  25.0  10.6   0.0 154.1 210.0  82.5  24.3  96.6 152.0
+ 2  15.5  1.30  6.00   8.0  25.0  25.3   0.0  93.9 210.0  82.5  24.3  96.6 152.0
+ 3  15.5  1.40  6.00   8.0  25.0  33.1   0.0 109.9 210.0  82.5  24.3  96.6 152.0
+ 4  15.5  1.40  6.00   8.0  25.0  64.9   1.2  31.0 210.0  82.5  24.3  96.6 152.0
+ 5  15.5  1.50  6.00   8.0  25.0 125.6   6.6  31.0 210.0  82.5  24.3  96.6 152.0
+ 6  15.5  2.20  6.00   8.0  25.0 191.7  72.8  31.0 218.4  82.5  24.3  96.6 152.0
 
 *HYDROPONIC CONTROL
 @L  AUPH  AUVL  AUCN  AUO2
@@ -93,8 +93,8 @@
  1 GE              1     1     S 23014  2150 Bibb N-Level NFT Sharkey  024
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
  1 OP              Y     Y     N     N     N     N     N     N     M
-@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
- 1 ME              H     M     E     R     S     L     Y     1     G     S     2
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL METMP MEGHG SYSTM
+ 1 ME              H     M     E     R     S     L     R     1     G     S     2     D     0     H
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
  1 MA              R     N     N     N     R
 @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT

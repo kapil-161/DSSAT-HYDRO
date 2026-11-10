@@ -13,9 +13,7 @@
 *TREATMENTS                        -------------FACTOR LEVELS------------
 @N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM HS HC
  1 1 0 0 SITONIA ActDose            1  1  0  1  1  0  0  0  0  0  1  1  1  1  1
-!2 1 0 0 SITONIA Vol50mm            1  1  0  1  1  0  0  0  0  0  1  1  1  2  1
-!3 1 0 0 SITONIA AutoConcN          1  1  0  1  1  0  0  0  0  0  1  1  1  1  2
-!4 1 0 0 SITONIA Vol50mm_AucnN      1  1  0  1  1  0  0  0  0  0  1  1  1  2  2
+
 
 *CULTIVARS
 @C CR INGENO CNAME
@@ -23,7 +21,7 @@
 
 *FIELDS
 @L ID_FIELD WSTA....  FLSA  FLOB  FLDT  FLDD  FLDS  FLST SLTX  SLDP  ID_SOIL    FLNAME
- 1 WAGA0001 WAGA9101   -99   -99   -99   -99   -99   -99 -99    -99  -99        Hydroponic_NFT_Wageningen
+ 1 WAGA0001 WAGA9101   -99   -99   -99   -99   -99   -99 -99    -99  IB00000005 Hydroponic_NFT_Wageningen
 @L ...........XCRD ...........YCRD .....ELEV .............AREA .SLEN .FLWR .SLAS FLHST FHDUR
  1             -99             -99       -99              9.21   -99   -99   -99   -99   -99
 @L PMALB  BDWD  BDHT
@@ -35,7 +33,7 @@
 
 *PLANTING DETAILS
 @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
- 1 91154   -99  15.6  15.6     T     R  23.5     0     2  1.87    21    15   -99     4                        NFT Transplants (Heinen Tbl 3.1 Wk0: 12mg/plant)
+ 1 91154   -99  15.6  15.6     T     R  23.5     0     2  1.40    21    15   -99     4                        NFT Transplants (Heinen Tbl 3.1 Wk0: 9mg/plant)
 
 *IRRIGATION AND WATER MANAGEMENT
 @I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
@@ -57,7 +55,7 @@
 
 *ENVIRONMENT MODIFICATIONS
 @E ODATE EDAY  ERAD  EMAX  EMIN  ERAIN ECO2  EDEW  EWIND ENVNAME
- 1 91154 -   0 - -99 - -99 - -99 - 0.0 - 709 -   0 -   0 O2_709ppm
+ 1 91154 -   0 M0.60 - -99 - -99 - 0.0 -   0 -   0 -   0 GH_trans_0.60
 
 *HARVEST DETAILS
 @H HDATE  HSTG  HCOM HSIZE   HPC  HBPC HNAME
@@ -69,30 +67,22 @@
 
 *HYDROPONIC SOLUTION
 @L  SVOL    EC    PH   DO2  TEMP  NO3C  NH4C    PC    KC   CAC   MGC    SC  CHLN
- 1 168.0  0.86  6.00   8.0  15.0  82.2   0.0  11.7 126.2 100.2  18.2 120.1 326.5
- 2  50.0  0.86  6.00   8.0  15.0  82.2   0.0  11.7 126.2 100.2  18.2 120.1 326.5
-! NOTE: System volume = 168.0 L (measured, cv=1.3%)
-! NOTE: Final system volume = 176.4 L (5% increase due to root mat water retention)
-! NOTE: Gully geometry (Heinen et al. 1991): 12 gullies x 326.5 cm long x 23.5 cm wide x 4.0 cm deep, slope 1:75 (S-facing)
-! NOTE: Greenhouse area = 9.21 m2 (12 x 3.265 m x 0.235 m), derived from gully geometry
-! NOTE: PPOP = 15.64 plants/m2 (156,400/ha); 144 plants / 9.21 m2 = 15.6; in-row spacing ~27.2 cm (326.5 / 12)
-! NOTE: SOLVOL = 18.2 mm = 168 L / 9.21 m2; CHLEN = 326.5 cm; = 23.5 cm from gully geometr
+ 1  18.2  1.20  6.00   8.0  25.0  70.0   0.0  10.3 102.6  47.0   9.5   5.4 326.5
+
 
 *HYDROPONIC CONTROL
 @L  AUPH  AUVL  AUCN  AUO2
- 1     Y     Y     I     Y
- 2     Y     Y     N     Y
-! pH acid: 0.1 M HNO3; pH base: 0.1 M KOH
-! Water level: automatic constant level in supply tank
-! Nutrient dosing: MANUAL daily at 16:00h based on measured NO3 and uptake ratios
+ 1     Y     Y     Y     Y
+
+
 
 *SIMULATION CONTROLS
 @N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
  1 GE              1     1     S 91153  2150 Heinen1994 Exp6705 NFT    -99
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
- 1 OP              Y     Y     N     N     N     N     N     N     M
-@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
- 1 ME              M     M     E     R     S     L     Y     1     G     S     2
+ 1 OP              N     N     N     N     N     N     N     N     M
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL METMP MEGHG SYSTM
+ 1 ME              M     M     E     R     S     L     R     1     G     S     2     D     0     S
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
  1 MA              R     N     R     N     R
 @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT
@@ -109,4 +99,21 @@
  1 RE            100     1    20
 @N HARVEST     HFRST HLAST HPCNP HPCNR HMFRQ HMGDD HMCUT HMMOW HRSPL HMVS
  1 HA              0 91365   100     0   -99   -99   -99   -99   -99  -99
+! pH acid: 0.1 M HNO3; pH base: 0.1 M KOH
+! Water level: automatic constant level in supply tank
+! Nutrient dosing: MANUAL daily at 16:00h based on measured NO3 and uptake ratios
+! NOTE: System volume = 168.0 L (measured, cv=1.3%)
+! NOTE: Final system volume = 176.4 L (5% increase due to root mat water retention)
+! NOTE: Gully geometry (Heinen et al. 1991): 12 gullies x 326.5 cm long x 23.5 cm wide x 4.0 cm deep, slope 1:75 (S-facing)
+! NOTE: Greenhouse area = 9.21 m2 (12 x 3.265 m x 0.235 m), derived from gully geometry
+! NOTE: PPOP = 15.64 plants/m2 (156,400/ha); 144 plants / 9.21 m2 = 15.6; in-row spacing ~27.2 cm (326.5 / 12)
+! NOTE: SOLVOL = 18.2 mm = 168 L / 9.21 m2; CHLEN = 326.5 cm; = 23.5 cm from gully geometr
+! NOTE: NO3C/PC/KC/CAC/MGC/SC corrected 2026-08-04 to match Heinen 1994 (Rapport 1, exp 6705) Table 2.1
+!       set points (mmol/L: NO3 5.000, P 0.333, K 2.624, Ca 1.172, Mg 0.392, SO4-S 0.168),
+!       converted to mg element/L. Previous values (82.2/11.7/126.2/100.2/18.2/120.1) were wrong:
+!       Ca and Mg matched the OTHER Heinen experiment (1991 paper, exp 5132, 2x concentration),
+!       and S was ~22x too high versus either source.
 
+! NOTE 2026-11-06: SVOL is read as mm depth by IPEXP.for; 168 L / 9.21 m2 = 18.2 mm (was 168.0, 9x too large).
+! NOTE 2026-11-06: PLWT restored to measured 1.87 kg/ha (12 mg/plant x 15.6 plants/m2); was 1.00.
+! NOTE 2026-11-06: PLWT 1.40 kg/ha = 9.0 mg/plant x 15.6 plants/m2. Heinen Tbl 3.1 week 0: shoot dry 0.007 g; root dry 0.005 g at 14.15% d.m. is likely inflated by sand (seedlings sown on sand), so root dry taken as root fresh 0.033 g x 6% (later harvests 5.8 to 6.9%) = 0.002 g.

@@ -11,14 +11,14 @@ C  12/22/2025 Updated to track dynamic solution volume
 C  12/22/2025 Updated to use mm everywhere (removed liters)
 C  02/03/2026 Added AUTO_VOL refill logic to maintain constant volume
 C-----------------------------------------------------------------------
-C  Called from: SPAM
+C  Called from: HYDROPONICS
 C
 C-----------------------------------------------------------------------
 
       SUBROUTINE HYDRO_WATER(
      &    CONTROL, ISWITCH,                    !Input
-     &    EP, RWUMX,                           !Input - transpiration, max root uptake
-     &    TRWUP, TRWU, ES)                    !Output
+     &    EP, ES, RWUMX,                       !Input - transp., evap., max root uptake
+     &    TRWUP, TRWU)                         !Output
 
       USE ModuleDefs
       USE ModuleData
@@ -31,10 +31,12 @@ C-----------------------------------------------------------------------
 C     Input variables
       REAL EP         ! Plant transpiration (mm/d) - from SPAM
 
+      REAL ES         ! Evaporation from the solution surface (mm/d),
+                      ! from SPAM (plant holes, see SPAM RATE)
+
 C     Output variables
       REAL TRWUP      ! Total potential root water uptake (cm/d)
       REAL TRWU       ! Total actual root water uptake (cm/d)
-      REAL ES         ! Actual soil evaporation (mm/d)
 
 C     Local variables - all in mm
       REAL SOLVOL_MM      ! Solution depth (mm)
@@ -55,6 +57,7 @@ C     Root-dependent water uptake variables
       REAL RWUMX          ! Max water uptake per root length (cm3/cm root/d) - input
       REAL TRLV           ! Total root length volume (cm root/cm2 ground)
       REAL ROOT_SUPPLY_MM ! Root-limited water supply (mm/d)
+      REAL, PARAMETER :: SOLVOL_MIN = 0.1  ! Minimum solution depth (mm)
       INTEGER DYNAMIC
       CHARACTER*1 IDETL   ! Detail level for output
 
@@ -78,7 +81,6 @@ C       ModuleData stores SOLVOL in mm directly from experiment file
 C-----------------------------------------------------------------------
         TRWUP = 0.0
         TRWU  = 0.0
-        ES    = 0.0
 
 C       Get detail level for output
         IDETL = ISWITCH % IDETL
@@ -108,7 +110,6 @@ C       PHASE 1: Calculate POTENTIAL water supply (like ROOTWU in soil)
 C       In hydroponics water is unlimited: TRWUP = previous day EP
 C       EC stress propagates through ECSTRESS factors in SOLEC, not WUF
 C-----------------------------------------------------------------------
-        ES = 0.0     ! No soil evaporation in hydroponics
         TRWU = 0.0   ! Actual uptake calculated in INTEGR phase
 
 C       Get detail level for output
@@ -182,10 +183,10 @@ C       Convert to cm/d for output (TRWU, TRWUP in cm/d per unit area)
 C       Plant uptake in mm/d (for depth balance)
         PLANT_UPTAKE_MM = TRWU_MM  ! mm/d
 
-C       Solution evaporation is minimal in closed systems
-C       Estimate as 1% of transpiration (typical for NFT systems)
-        SOL_EVAP_MM = PLANT_UPTAKE_MM * 0.01  ! mm/d
-        ES = 0.0  ! No soil evaporation in hydroponics (output variable)
+C       Evaporation from the exposed solution surface (plant holes),
+C       calculated in SPAM from the potential evaporation under the
+C       canopy (replaces the fixed 5% of transpiration, 2026-11-09)
+        SOL_EVAP_MM = MAX(0.0, ES)  ! mm/d
 
 C       AUTO_VOL: Automatic volume control (1.0=refill to initial, 0.0=drift)
         CALL GET('HYDRO','AUTO_VOL',AUTO_VOL_R)
@@ -209,12 +210,14 @@ C       Update solution depth
      &         - PLANT_UPTAKE_MM                 ! Plant uptake (mm)
      &         - SOL_EVAP_MM                     ! Evaporation (mm)
 
-C       CRITICAL: Enforce minimum solution volume to prevent crashes
-C       When volume drops below minimum, plants should experience severe stress
-C       but simulation should continue (growth stops, senescence may occur)
-C       Minimum of 5.0 mm prevents numerical instability in nutrient calculations
-        IF (SOLVOL_MM .LT. 5.0) THEN
-          SOLVOL_MM = 5.0  ! Minimum 5.0 mm (5.0 L/m²)
+C       Minimum solution volume: close to, but not, zero (SOLVOL_MIN).
+C       It only keeps the volume positive so the concentration factor
+C       below stays finite; SOLO2, SOLPH and the uptake routines guard
+C       their own divisions at the same or a smaller volume. Reached only
+C       when AUTO_VOL = N and the solution is allowed to dry out.
+C       (Was 5.0 mm before 2026-11-09.)
+        IF (SOLVOL_MM .LT. SOLVOL_MIN) THEN
+          SOLVOL_MM = SOLVOL_MIN
           WRITE(*,'(A)') ' HYDRO_WATER WARNING: Solution volume at '//
      &                   'minimum - severe water/nutrient stress!'
         ENDIF

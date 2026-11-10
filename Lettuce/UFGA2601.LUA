@@ -10,7 +10,9 @@
 ! CHTA = canopy height at harvest (m); avg head height cm / 100
 ! L#SM = leaf number at harvest; avg leaf count
 
+! NOTE 2026-11-10: CWAM and LAIX converted with the final stand density 15.25 plants/m2 instead of 24.4, to match PPOP in UFGA2601.LUX.
+! NOTE 2026-11-10: L#SM = mean final leaf count excluding leaves < 2 cm2 (as L#SD in the .LUT); was total count incl. small leaves (30.0, 28.0).
 @TRNO     DATE    CWAM    LAIX    CHTA    L#SM
-     1   26013  1350.3  5.4493  0.2922    30.0
-     3   26013  1551.4  4.2116  0.2246    28.0
+     1   26013   843.9  3.4058  0.2922    25.2
+     3   26013   969.6  2.6322  0.2246    24.6
 

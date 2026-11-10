@@ -669,6 +669,7 @@ set(
         "Hydroponic/SOLO2.for"
         "Hydroponic/OPSOL.for"
         "Hydroponic/HYDRO_FERT.for"
+        "Hydroponic/HYDROPONICS.for"
         "Weather/CO2VAL.for"
         "Weather/HMET.for"
         "Weather/HR2DLY.for"

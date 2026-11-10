@@ -33,7 +33,7 @@ C-----------------------------------------------------------------------
 
       IMPLICIT NONE
       EXTERNAL INFO, ERROR, WARNING, IPIBS, WEATHR, SOIL, SPAM, PLANT, 
-     &  MGMTOPS
+     &  MGMTOPS, HYDROPONICS
       SAVE
 C-----------------------------------------------------------------------
 C     Crop, Experiment, Command line Variables
@@ -177,6 +177,13 @@ C-----------------------------------------------------------------------
      &    SW, SWDELTS, SWDELTU, UPPM, WINF, YREND)        !Output
 
 C-----------------------------------------------------------------------
+C     Hydroponic solution module (only active when HYDRO=Y)
+C-----------------------------------------------------------------------
+      CALL HYDROPONICS(CONTROL, ISWITCH,
+     &    EP, ES, RWUMX, WEATHER,                         !Input
+     &    TRWU, TRWUP)                                    !Output
+
+C-----------------------------------------------------------------------
 C     Read initial soil-plant-atmosphere data
 C-----------------------------------------------------------------------
       CALL SPAM(CONTROL, ISWITCH,
@@ -245,6 +252,13 @@ C-----------------------------------------------------------------------
      &    NH4_plant, NO3_plant, SKi_AVAIL, SNOW,          !Output
      &    SPi_AVAIL, SOILPROP, SomLitC, SomLitE,          !Output
      &    SW, SWDELTS, SWDELTU, UPPM, WINF, YREND)        !Output
+
+C-----------------------------------------------------------------------
+C     Hydroponic solution module (only active when HYDRO=Y)
+C-----------------------------------------------------------------------
+      CALL HYDROPONICS(CONTROL, ISWITCH,
+     &    EP, ES, RWUMX, WEATHER,                         !Input
+     &    TRWU, TRWUP)                                    !Output
 
 C-----------------------------------------------------------------------
 C     Seasonal initialization for soil-plant-atmosphere processes
@@ -319,6 +333,13 @@ C-----------------------------------------------------------------------
      &    SW, SWDELTS, SWDELTU, UPPM, WINF, YREND)        !Output
 
 C-----------------------------------------------------------------------
+C     Hydroponic solution module (only active when HYDRO=Y)
+C-----------------------------------------------------------------------
+      CALL HYDROPONICS(CONTROL, ISWITCH,
+     &    EP, ES, RWUMX, WEATHER,                         !Input
+     &    TRWU, TRWUP)                                    !Output
+
+C-----------------------------------------------------------------------
 C     Call Soil-plant-atmosphere module to determine today's
 C     rates of evapotranspiration.
 C-----------------------------------------------------------------------
@@ -365,6 +386,13 @@ C-----------------------------------------------------------------------
      &    NH4_plant, NO3_plant, SKi_AVAIL, SNOW,          !Output
      &    SPi_AVAIL, SOILPROP, SomLitC, SomLitE,          !Output
      &    SW, SWDELTS, SWDELTU, UPPM, WINF, YREND)        !Output
+
+C-----------------------------------------------------------------------
+C     Hydroponic solution module (only active when HYDRO=Y)
+C-----------------------------------------------------------------------
+      CALL HYDROPONICS(CONTROL, ISWITCH,
+     &    EP, ES, RWUMX, WEATHER,                         !Input
+     &    TRWU, TRWUP)                                    !Output
 
 C-----------------------------------------------------------------------
 C     Compute cumulative totals for soil-plant-atmosphere processes
@@ -423,6 +451,13 @@ C***********************************************************************
      &    SPi_AVAIL, SOILPROP, SomLitC, SomLitE,          !Output
      &    SW, SWDELTS, SWDELTU, UPPM, WINF, YREND)        !Output
 
+C-----------------------------------------------------------------------
+C     Hydroponic solution module (only active when HYDRO=Y)
+C-----------------------------------------------------------------------
+      CALL HYDROPONICS(CONTROL, ISWITCH,
+     &    EP, ES, RWUMX, WEATHER,                         !Input
+     &    TRWU, TRWUP)                                    !Output
+
         CALL SPAM(CONTROL, ISWITCH,
      &    CANHT, EORATIO, KSEVAP, KTRANS, MULCH,          !Input
      &    PSTRES1, PORMIN, RLV, RWUMX, SOILPROP, SW,      !Input
@@ -472,6 +507,13 @@ C     Print seasonal summaries and close files.
      &    NH4_plant, NO3_plant, SKi_AVAIL, SNOW,          !Output
      &    SPi_AVAIL, SOILPROP, SomLitC, SomLitE,          !Output
      &    SW, SWDELTS, SWDELTU, UPPM, WINF, YREND)        !Output
+
+C-----------------------------------------------------------------------
+C     Hydroponic solution module (only active when HYDRO=Y)
+C-----------------------------------------------------------------------
+      CALL HYDROPONICS(CONTROL, ISWITCH,
+     &    EP, ES, RWUMX, WEATHER,                         !Input
+     &    TRWU, TRWUP)                                    !Output
 
       CALL SPAM(CONTROL, ISWITCH,
      &    CANHT, EORATIO, KSEVAP, KTRANS, MULCH,          !Input
